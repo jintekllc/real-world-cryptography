@@ -1,0 +1,21 @@
+.planning/
+
+# Book source — local only, never commit
+Real-World-Cryptography.pdf
+*.pdf
+
+# Node / Astro
+node_modules/
+dist/
+.astro/
+.output/
+
+# Env / local
+.env
+.env.local
+.DS_Store
+
+# LLM
+.planning/
+.claude/
+CLAUDE.md
