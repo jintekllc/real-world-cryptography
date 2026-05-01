@@ -1,0 +1,51 @@
+# .github/workflows/ci.yml
+# Runs on PRs to main. Same astro check gate as deploy, but does NOT publish.
+# D-18:: PRs run the same gate but no deploy — separate from deploy.yml.
+# D-20:: NO PR preview deploys in v1 — this workflow does not invoke
+# the Astro Pages action and creates no preview job.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+# Concurrency keyed on PR ref so a new push to a PR cancels the previous run.
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+# Read-only — this workflow does not write to Pages.
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm exec astro check
+
+      - name: Build (smoke)
+        # Build to catch issues astro check misses (e.g., asset paths,
+        # broken imports inside .astro files only loaded at build time).
+        # No artifact upload — this run is purely a gate (D-20:: no preview deploy).
+        run: pnpm exec astro build

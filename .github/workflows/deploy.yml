@@ -1,0 +1,72 @@
+# .github/workflows/deploy.yml
+# Builds and deploys the Astro static site to GitHub Pages on every push to main.
+# D-01:: hosted at github.com/jintekllc/real-world-cryptography
+# D-19:: Pages source must be set to "GitHub Actions" in repo Settings > Pages
+# (one-time manual step before first deploy — Pitfall P1.3, locked in Plan 05 checkpoint).
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# D-17: a newer push supersedes a running deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+# Required by GitHub Pages OIDC publish path.
+# https://docs.astro.build/en/guides/deploy/github/
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          # Match the local pnpm major; lockfile was generated with pnpm@10.
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'   # D-23: Astro 6 minimum
+          cache: 'pnpm'           # D-07
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        # D-16:: astro check is the deploy gate in Phase 1.
+        # Failing types must fail the deploy. No test framework runs here.
+        run: pnpm exec astro check
+
+      - name: Build, package, and upload Pages artifact
+        # withastro/action runs `astro build` and uploads the dist/ artifact
+        # via actions/upload-pages-artifact internally.
+        # The packaged artifact preserves dist/.nojekyll (D-04:) verbatim.
+        # Per D-19: reconciliation 2026-04-30: pinned to v6 (current major).
+        uses: withastro/action@v6
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        # Per D-19: reconciliation: pinned to v5 (current major as of 2026-04-30).
+        uses: actions/deploy-pages@v5
