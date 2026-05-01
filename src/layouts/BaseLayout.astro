@@ -1,0 +1,32 @@
+---
+import { withBase } from '~/lib/url';
+import { Font } from 'astro:assets';
+import '~/styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+<html lang="en" class="bg-[var(--color-bg)] text-[var(--color-fg)]">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <Font cssVariable="--font-mono" preload />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+  </head>
+  <body class="font-mono antialiased">
+    <main class="max-w-3xl mx-auto px-6 py-16">
+      <slot />
+    </main>
+    <footer class="max-w-3xl mx-auto px-6 mt-16 mb-8 text-sm text-[var(--color-muted-2)]">
+      <slot name="footer">Built with Astro · deployed via GitHub Pages.</slot>
+    </footer>
+  </body>
+</html>
