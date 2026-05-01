@@ -1,0 +1,22 @@
+/* src/styles/global.css */
+@import "tailwindcss";
+
+@theme {
+  /* Locked palette — UI-SPEC.md ## Color, CONTEXT.md D-11:, D-12:, D-13:, D-14: */
+  --color-bg: #0a0a0a;            /* D-11: dominant surface (zinc-950) */
+  --color-surface: #18181b;       /* secondary panels, code-block fill (zinc-900) */
+  --color-fg: #e4e4e7;            /* D-12: body text (zinc-200) */
+  --color-muted: #a1a1aa;         /* D-12: zinc-400 */
+  --color-muted-2: #71717a;       /* D-12: zinc-500 */
+  --color-accent: #00FF66;        /* D-13: phosphor green */
+  --color-accent-dim: oklch(0.85 0.3 145 / 0.5); /* flat fallback per OQ-2; reserved for Phase 4+ */
+  /* D-14:: v1 ships only the seven tokens above — no warn/danger semantic colors. */
+
+  /* JetBrains Mono token — name must match astro.config.mjs fonts[].cssVariable (D-10:, D-15:) */
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
