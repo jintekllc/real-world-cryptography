@@ -8,14 +8,13 @@
 // Use this module in every consumer:
 //   import type { Question, Assessment } from '~/lib/types';
 //   import type { Answer, GradeResult } from '~/lib/types';
+//   import type { ProgressV1, AttemptRecord } from '~/lib/types';
 //
 // `verbatimModuleSyntax: true` in tsconfig.json requires `export type`
 // for type-only re-exports. Do NOT add `export { ... }` (without `type`)
 // — it would generate runtime imports for things that don't exist at
 // runtime.
-//
-// NOTE: Plan 04 (sibling in Wave 2) appends a third re-export line for
-// ProgressV1/MetaV1/AssessmentProgress/AttemptRecord from ~/lib/progress/schema.
 
 export type { Chapter, QuestionBank, Question, Assessment } from '~/content.config';
 export type { Answer, GradeResult, Verdict } from '~/lib/grader';
+export type { ProgressV1, MetaV1, AssessmentProgress, AttemptRecord } from '~/lib/progress/schema';
