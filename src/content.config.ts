@@ -91,15 +91,42 @@ const questionSchema = z.discriminatedUnion('kind', [
 // Collections
 // =============================================================
 
+// Local schema objects — Zod 4 typed at point of definition so
+// `z.infer<typeof X>` resolves cleanly. defineCollection() declares
+// `schema?: S | ((ctx) => S)` (optional + may be a thunk), so inferring
+// from `chapters.schema` directly resolves to `{}`. Hoisting the schema
+// objects out of the defineCollection() call sites preserves the schemas
+// as the single source of truth while letting consumers re-derive types.
+
+const chapterSchema = z.object({
+  chapter: z.string().regex(/^ch\d{2}$/),           // 'ch00' .. 'ch12'
+  part: z.union([z.literal(1), z.literal(2)]),       // numeric literals (Zod 4)
+  title: z.string().min(1),
+  order: z.number().int().nonnegative(),
+});
+
+const questionBankSchema = z.object({
+  chapterId: z.string().regex(/^ch\d{2}$/),
+  questions: z.array(questionSchema).min(1),
+});
+
+// assessmentId is free-form kebab-case (Q12.5) so Phase 6 can mint per-chapter
+// quiz ids without a schema bump. D-24 names six known IDs; the regex permits
+// those AND future ones like 'ch01-quiz', 'ch01-challenge'.
+const assessmentSchema = z.object({
+  id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),  // kebab-case (Q12.5)
+  title: z.string().min(1),
+  kind: z.enum([
+    'quiz', 'challenge', 'part-test', 'part-challenge', 'final-exam',
+  ]),
+  passThreshold: z.number().min(0).max(1),           // 0.7, 0.75, 0.8
+  questionIds: z.array(z.string().regex(/^ch\d{2}-q\d{2}$/)).min(1),
+});
+
 // `chapters` — one Markdown file per chapter (D-37 fixture is ch00-hello-crypto)
 const chapters = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/chapters' }),
-  schema: z.object({
-    chapter: z.string().regex(/^ch\d{2}$/),           // 'ch00' .. 'ch12'
-    part: z.union([z.literal(1), z.literal(2)]),       // numeric literals (Zod 4)
-    title: z.string().min(1),
-    order: z.number().int().nonnegative(),
-  }),
+  schema: chapterSchema,
 });
 
 // `questions` — one JSON BANK FILE per chapter; each file = one entry.
@@ -107,10 +134,7 @@ const chapters = defineCollection({
 // per-question inside each bank.
 const questions = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/questions' }),
-  schema: z.object({
-    chapterId: z.string().regex(/^ch\d{2}$/),
-    questions: z.array(questionSchema).min(1),
-  }),
+  schema: questionBankSchema,
 });
 
 // `assessments` — one JSON file per assessment; each file = one entry.
@@ -118,34 +142,25 @@ const questions = defineCollection({
 // We do NOT use Astro's `reference()` because questions are nested inside
 // banks, not top-level collection entries (Pitfall 11.7 acknowledged —
 // cross-collection lint is deferred to Phase 6).
-//
-// assessmentId is free-form kebab-case (Q12.5) so Phase 6 can mint per-chapter
-// quiz ids without a schema bump. D-24 names six known IDs; the regex permits
-// those AND future ones like 'ch01-quiz', 'ch01-challenge'.
 const assessments = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/assessments' }),
-  schema: z.object({
-    id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),  // kebab-case (Q12.5)
-    title: z.string().min(1),
-    kind: z.enum([
-      'quiz', 'challenge', 'part-test', 'part-challenge', 'final-exam',
-    ]),
-    passThreshold: z.number().min(0).max(1),           // 0.7, 0.75, 0.8
-    questionIds: z.array(z.string().regex(/^ch\d{2}-q\d{2}$/)).min(1),
-  }),
+  schema: assessmentSchema,
 });
 
 export const collections = { chapters, questions, assessments };
 
 // Note (Conflict C-2 resolution): Astro 6's getCollection() and getEntry()
 // already return Promise<...>. The QuestionSource v1 implementation
-// (src/lib/questionSource.ts, Plan 03) awaits them directly — no
-// Promise.resolve(...) wrap. The async-first contract from D-28 is
-// honored at the interface level; the redundant wrap is omitted.
+// (src/lib/questionSource.ts, Plan 03) awaits them directly — the
+// redundant resolved-promise wrap is omitted. The async-first contract
+// from D-28 is honored at the interface level.
 
 // Inferred types — re-exported by src/lib/types.ts (Plan 03) so consumers
-// never reach into astro:content or astro/zod directly.
-export type Chapter = z.infer<typeof chapters.schema>;
-export type QuestionBank = z.infer<typeof questions.schema>;
+// never reach into astro:content or astro/zod directly. We infer from the
+// local schema constants (not chapters.schema etc.) because
+// defineCollection's return type marks `schema` as optional, which would
+// resolve `z.infer<typeof chapters.schema>` to `{}`.
+export type Chapter = z.infer<typeof chapterSchema>;
+export type QuestionBank = z.infer<typeof questionBankSchema>;
 export type Question = z.infer<typeof questionSchema>;
-export type Assessment = z.infer<typeof assessments.schema>;
+export type Assessment = z.infer<typeof assessmentSchema>;
