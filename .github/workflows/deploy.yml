@@ -57,7 +57,10 @@ jobs:
       - name: Type check
         # D-16:: astro check is the deploy gate in Phase 1.
         # Failing types must fail the deploy. No test framework runs here.
-        run: pnpm exec astro check
+        # `pnpm check` chains `astro sync` so generated types are fresh
+        # before checking — `astro check` alone leaves stale types on
+        # schema edits and silently masks real drift.
+        run: pnpm check
 
       - name: Build, package, and upload Pages artifact
         # withastro/action runs `astro build` and uploads the dist/ artifact
