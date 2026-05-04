@@ -11,13 +11,14 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check",
+    "check": "astro sync && astro check",
     "astro": "astro"
   },
   "dependencies": {
     "@astrojs/svelte": "8.1.0",
     "astro": "6.2.1",
-    "svelte": "^5.55.5"
+    "svelte": "^5.55.5",
+    "ulid": "3.0.2"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
