@@ -1,0 +1,12 @@
+{
+  "id": "hello-crypto-quiz",
+  "title": "Hello Crypto Quiz",
+  "kind": "quiz",
+  "passThreshold": 0.7,
+  "questionIds": [
+    "ch00-q01",
+    "ch00-q02",
+    "ch00-q03",
+    "ch00-q04"
+  ]
+}
