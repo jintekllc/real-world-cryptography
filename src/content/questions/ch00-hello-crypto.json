@@ -1,0 +1,62 @@
+{
+  "chapterId": "ch00",
+  "questions": [
+    {
+      "id": "ch00-q01",
+      "chapterId": "ch00",
+      "kind": "mc",
+      "prompt": "Which property does a cryptographic hash function NOT provide?",
+      "choices": [
+        "Pre-image resistance",
+        "Confidentiality of input",
+        "Collision resistance",
+        "Determinism"
+      ],
+      "answerIndex": 1,
+      "explanation": "Hashes are deterministic and one-way, but not encrypting — the input is not hidden, just compressed irreversibly.",
+      "tags": ["primitives", "hash"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch00-q02",
+      "chapterId": "ch00",
+      "kind": "tf",
+      "prompt": "AES-128 uses 14 rounds.",
+      "answer": false,
+      "explanation": "AES-128 uses 10 rounds. AES-192 uses 12, AES-256 uses 14.",
+      "tags": ["primitives", "aes"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch00-q03",
+      "chapterId": "ch00",
+      "kind": "short",
+      "prompt": "In one sentence, explain why ECB mode is considered insecure for encrypting structured data.",
+      "modelAnswer": "ECB encrypts identical plaintext blocks to identical ciphertext blocks, leaking structural patterns of the input.",
+      "rubric": [
+        "Mentions identical plaintext blocks produce identical ciphertext blocks",
+        "Mentions pattern leakage / structural information leak",
+        "Implies determinism is the root cause"
+      ],
+      "explanation": "The classic 'penguin' demonstration: an ECB-encrypted bitmap of Tux is still recognizably Tux because pixel patterns survive.",
+      "tags": ["primitives", "block-cipher", "modes"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch00-q04",
+      "chapterId": "ch00",
+      "kind": "code",
+      "prompt": "What is the SHA-256 of the empty string, in lowercase hex?",
+      "referenceAnswer": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "The SHA-256 of an empty input is a fixed, well-known constant — useful as a sanity check for hash implementations.",
+      "tags": ["primitives", "hash", "sha-256"],
+      "difficulty": "normal"
+    }
+  ]
+}
