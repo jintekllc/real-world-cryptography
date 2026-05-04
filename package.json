@@ -12,7 +12,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro sync && astro check",
-    "astro": "astro"
+    "astro": "astro",
+    "gates": "bash scripts/gates.sh"
   },
   "dependencies": {
     "@astrojs/svelte": "8.1.0",

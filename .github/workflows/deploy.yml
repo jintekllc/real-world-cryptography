@@ -46,6 +46,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Run chokepoint gates (G1-G4)
+        # Phase 2 SCHM-07 + LIB-01..03 enforcement:
+        # Fail the deploy on any chokepoint violation (G1 localStorage, G2
+        # astro:content, G3 Astro.glob, G4 z from astro:content). Runs
+        # before astro check so a clean type-check on a leaky bundle never
+        # masks a discipline violation.
+        run: bash scripts/gates.sh
+
       - name: Type check
         # D-16:: astro check is the deploy gate in Phase 1.
         # Failing types must fail the deploy. No test framework runs here.

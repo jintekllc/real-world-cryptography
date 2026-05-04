@@ -42,6 +42,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Run chokepoint gates (G1-G4)
+        # Phase 2 SCHM-07 + LIB-01..03 enforcement:
+        # G1 — localStorage chokepoint (D-33)
+        # G2 — astro:content chokepoint (LIB-01)
+        # G3 — no Astro.glob() (D-41)
+        # G4 — z from astro/zod, not astro:content (D-39)
+        # Exit non-zero on any violation; CI fails before astro check.
+        run: bash scripts/gates.sh
+
       - name: Type check
         run: pnpm exec astro check
 
