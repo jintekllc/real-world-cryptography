@@ -4,8 +4,8 @@ import type { CollectionEntry } from 'astro:content';
 
 interface Props {
   chapter: CollectionEntry<'chapters'>;
-  prev?: CollectionEntry<'chapters'>;
-  next?: CollectionEntry<'chapters'>;
+  prev?: CollectionEntry<'chapters'> | undefined;
+  next?: CollectionEntry<'chapters'> | undefined;
 }
 const { chapter, prev, next } = Astro.props;
 

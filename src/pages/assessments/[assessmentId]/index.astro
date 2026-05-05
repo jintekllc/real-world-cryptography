@@ -1,0 +1,67 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import ComingInPhase from '~/components/ComingInPhase.astro';
+
+export async function getStaticPaths() {
+  // D-49: ch00 is excluded from the dynamic enumeration — it has its OWN
+  // explicit static route at /assessments/hello-crypto-quiz/ (preserved fixture URL).
+  // D-60: page frontmatter MAY call getCollection('chapters') directly.
+  const cohortChapters = (await getCollection('chapters'))
+    .filter((c) => c.data.chapter !== 'ch00')
+    .sort((a, b) => a.data.order - b.data.order);
+
+  // D-43: 5 cross-cutting cohort assessments. Locked routeName/phase/description from UI-SPEC.
+  // routeName/phase/description flow ONLY into ComingInPhase's UI text rendering.
+  // The URL segment for each route is the `id` field below — assigned to `params.assessmentId`.
+  // Title characters never reach the URL (W5 — routeName/URL separation).
+  const partAndFinal: Array<{
+    id: string;
+    routeName: string;
+    phase: number;
+    description: string;
+  }> = [
+    { id: 'part-1-test',      routeName: 'Part 1 Test',      phase: 5, description: 'Required test covering Part 1: Primitives.' },
+    { id: 'part-1-challenge', routeName: 'Part 1 Challenge', phase: 5, description: 'Optional harder variant of the Part 1 test.' },
+    { id: 'part-2-test',      routeName: 'Part 2 Test',      phase: 5, description: 'Required test covering Part 2: Protocols.' },
+    { id: 'part-2-challenge', routeName: 'Part 2 Challenge', phase: 5, description: 'Optional harder variant of the Part 2 test.' },
+    { id: 'final-exam',       routeName: 'Final Exam',       phase: 5, description: 'Cumulative exam covering both parts.' },
+  ];
+
+  // D-58 convention: per-chapter assessment IDs are `${chapterId}-quiz` and
+  // `${chapterId}-challenge`. We build them here in the static enumeration —
+  // we do NOT call questionSource.getAssessment() (D-58 chokepoint).
+  // The URL segment is the `id` field (e.g., `ch01-quiz`); the routeName
+  // (`Introduction — Quiz`) is rendered as page title/h1 only and does NOT
+  // affect the URL.
+  const perChapter = cohortChapters.flatMap((c) => [
+    {
+      id: `${c.data.chapter}-quiz`,
+      routeName: `${c.data.title} — Quiz`,
+      phase: 4,
+      description: 'Required quiz for this chapter.',
+    },
+    {
+      id: `${c.data.chapter}-challenge`,
+      routeName: `${c.data.title} — Challenge`,
+      phase: 4,
+      description: 'Optional harder quiz for this chapter.',
+    },
+  ]);
+
+  // RESEARCH.md Key Decision #5: NEVER call withBase() inside params — Astro auto-prepends base.
+  return [...partAndFinal, ...perChapter].map((entry) => ({
+    params: { assessmentId: entry.id },
+    props: {
+      routeName: entry.routeName,
+      phase: entry.phase,
+      description: entry.description,
+    },
+  }));
+}
+
+const { routeName, phase, description } = Astro.props;
+---
+<BaseLayout title={`${routeName} — Real-World Cryptography Course`}>
+  <ComingInPhase routeName={routeName} phase={phase} description={description} />
+</BaseLayout>

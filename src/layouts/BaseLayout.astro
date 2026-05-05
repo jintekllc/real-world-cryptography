@@ -1,6 +1,7 @@
 ---
 import { withBase } from '~/lib/url';
 import { Font } from 'astro:assets';
+import SiteHeader from '~/components/SiteHeader.astro';
 import '~/styles/global.css';
 
 interface Props {
@@ -22,6 +23,8 @@ const { title, description } = Astro.props;
     {description && <meta name="description" content={description} />}
   </head>
   <body class="font-mono antialiased">
+    {/* DO NOT add overflow:* to <html> or <body> — breaks <SiteHeader>'s position: sticky (RESEARCH.md Key Decision #6 / Q3). */}
+    <SiteHeader />
     <main class="max-w-3xl mx-auto px-6 py-16">
       <slot />
     </main>

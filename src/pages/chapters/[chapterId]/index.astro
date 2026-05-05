@@ -1,0 +1,42 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import ChapterFooterNav from '~/components/ChapterFooterNav.astro';
+
+export async function getStaticPaths() {
+  // D-49: enumerate ALL chapters including ch00 — only the homepage / chapter
+  // index views filter ch00 out. Visitors can reach /chapters/ch00/ directly.
+  // D-60: page frontmatter MAY call getCollection('chapters') directly.
+  const chapters = await getCollection('chapters');
+  const sorted = [...chapters].sort((a, b) => a.data.order - b.data.order);
+
+  return sorted.map((entry, idx) => {
+    // Pre-compute prev/next at build time. Pass via props so the page body
+    // doesn't re-fetch the collection. With noUncheckedIndexedAccess: true,
+    // sorted[idx - 1] / sorted[idx + 1] are typed `Entry | undefined`.
+    const prev = idx > 0 ? sorted[idx - 1] : undefined;
+    const next = idx < sorted.length - 1 ? sorted[idx + 1] : undefined;
+
+    // RESEARCH.md Key Decision #1: params.chapterId MUST be entry.data.chapter
+    // (the validated `ch00`..`ch16` literal), NOT entry.id (slugified filename).
+    // RESEARCH.md Key Decision #5: NEVER call withBase() here — Astro auto-prepends base.
+    return {
+      params: { chapterId: entry.data.chapter },
+      props: { entry, prev, next },
+    };
+  });
+}
+
+// Astro auto-types Astro.props from getStaticPaths return.
+const { entry, prev, next } = Astro.props;
+
+// RESEARCH.md Key Decision #2: Astro 6 canonical render — entry.render() is REMOVED.
+const { Content } = await render(entry);
+---
+<BaseLayout title={`${entry.data.title} — Real-World Cryptography Course`}>
+  <h1 class="text-3xl font-semibold">{entry.data.title}</h1>
+  <article class="mt-8 leading-relaxed">
+    <Content />
+  </article>
+  <ChapterFooterNav chapter={entry} prev={prev} next={next} />
+</BaseLayout>
