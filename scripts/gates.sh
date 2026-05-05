@@ -6,11 +6,15 @@
 # "Hand-Grep Chokepoint Gates" section.
 #
 # Gates:
-#   G1 (D-33, LIB-03): only src/lib/progress/ touches localStorage
-#   G2 (LIB-01):       only src/lib/questionSource.ts + src/content.config.ts
-#                       import from 'astro:content'
-#   G3 (D-41):         no Astro.glob() anywhere
-#   G4 (D-39):         no `import { z } from 'astro:content'` (use astro/zod)
+#   G1  (D-33, LIB-03): only src/lib/progress/ touches localStorage
+#   G2  (LIB-01, D-60): astro:content runtime imports limited to
+#                        src/lib/questionSource.ts + src/content.config.ts +
+#                        src/pages/ (chapters reads — D-60 Phase 3 relaxation);
+#                        type-only imports permitted everywhere
+#   G2b (D-29, D-60):   src/pages/ may NOT call getCollection('questions')
+#                        or getCollection('assessments') — chokepoint preserved
+#   G3  (D-41):         no Astro.glob() anywhere
+#   G4  (D-39):         no `import { z } from 'astro:content'` (use astro/zod)
 #
 # Exit codes:
 #   0 — all four gates pass (no violations)
@@ -33,7 +37,7 @@ cd "$REPO_ROOT"
 set +e
 FAIL=0
 
-echo "==> Running chokepoint gates for Phase 2"
+echo "==> Running chokepoint gates (Phase 1 + 2 + 3)"
 
 # -----------------------------------------------------------------------------
 # Gate G1: NO direct localStorage access outside src/lib/progress/
@@ -52,20 +56,41 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Gate G2: NO direct astro:content imports outside questionSource.ts + content.config.ts
+# Gate G2: astro:content runtime imports only in allowed locations
 # -----------------------------------------------------------------------------
-# Rationale: LIB-01 — every UI consumer of question data goes through the
-# QuestionSource interface. The two exempt files are: src/content.config.ts
-# (must import defineCollection from astro:content — schema authority) and
-# src/lib/questionSource.ts (the v1 implementation that wraps getCollection
-# and getEntry).
-echo "  [G2] astro:content chokepoint (LIB-01)"
+# Rationale: LIB-01 + D-60. Runtime imports from 'astro:content' are limited to:
+#   - src/content.config.ts        (defineCollection schema authority)
+#   - src/lib/questionSource.ts    (the v1 questions/assessments wrapper)
+#   - src/pages/                   (D-60 — pages may read 'chapters' directly)
+# Type-only imports (`import type { ... } from 'astro:content'`) are permitted
+# everywhere — they erase at compile time and don't violate the chokepoint.
+# G2b (below) further restricts pages from reading 'questions'/'assessments'.
+echo "  [G2] astro:content chokepoint (LIB-01, D-60 relaxation for src/pages/; type-only imports permitted everywhere)"
 G2_OUT=$(grep -rn "from 'astro:content'" src/ 2>/dev/null \
   | grep -v 'src/lib/questionSource.ts' \
-  | grep -v 'src/content.config.ts' || true)
+  | grep -v 'src/content.config.ts' \
+  | grep -v 'src/pages/' \
+  | grep -v 'import type' || true)
 if [ -n "$G2_OUT" ]; then
-  echo "    FAIL: astro:content imports outside questionSource.ts/content.config.ts:"
+  echo "    FAIL: astro:content runtime imports outside allowed locations:"
   echo "$G2_OUT" | sed 's/^/      /'
+  FAIL=1
+else
+  echo "    OK"
+fi
+
+# -----------------------------------------------------------------------------
+# Gate G2b: src/pages/ may NOT call getCollection('questions'|'assessments')
+# -----------------------------------------------------------------------------
+# Rationale: D-29 + D-60 — pages may read 'chapters' directly (D-60), but
+# 'questions' / 'assessments' reads remain the chokepoint domain of
+# src/lib/questionSource.ts. Phase 4+ adds new pages (quiz routes); this
+# gate keeps them from drifting into direct collection reads.
+echo "  [G2b] pages may not read questions/assessments collections (D-29, D-60)"
+G2b_OUT=$(grep -rEn "getCollection\(['\"](questions|assessments)" src/pages/ 2>/dev/null || true)
+if [ -n "$G2b_OUT" ]; then
+  echo "    FAIL: pages directly reading questions/assessments — go through QuestionSource:"
+  echo "$G2b_OUT" | sed 's/^/      /'
   FAIL=1
 else
   echo "    OK"
@@ -114,7 +139,7 @@ fi
 # -----------------------------------------------------------------------------
 echo ""
 if [ "$FAIL" -eq 0 ]; then
-  echo "==> All chokepoint gates passed (G1, G2, G3, G4)"
+  echo "==> All chokepoint gates passed (G1, G2, G2b, G3, G4)"
   exit 0
 else
   echo "==> CHOKEPOINT GATE FAILURE — see violations above" >&2

@@ -1,0 +1,76 @@
+---
+import { withBase } from '~/lib/url';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  chapter: CollectionEntry<'chapters'>;
+  prev?: CollectionEntry<'chapters'>;
+  next?: CollectionEntry<'chapters'>;
+}
+const { chapter, prev, next } = Astro.props;
+
+// Part-boundary detection (D-54).
+// Last chapter of Part 1: next undefined OR next.data.part !== 1.
+//   -> "Next: Part 1 Test ->" -> /assessments/part-1-test/
+// Last chapter of Part 2: next undefined.
+//   -> "Next: Part 2 Test ->" -> /assessments/part-2-test/
+const isLastOfPart1 = chapter.data.part === 1 && (next === undefined || next.data.part !== 1);
+const isLastOfPart2 = chapter.data.part === 2 && next === undefined;
+
+let nextHref: string | undefined;
+let nextLabel: string;
+if (isLastOfPart1) {
+  nextHref = withBase('/assessments/part-1-test/');
+  nextLabel = 'Next: Part 1 Test →';
+} else if (isLastOfPart2) {
+  nextHref = withBase('/assessments/part-2-test/');
+  nextLabel = 'Next: Part 2 Test →';
+} else if (next !== undefined) {
+  nextHref = withBase(`/chapters/${next.data.chapter}/`);
+  nextLabel = 'Next chapter →';
+} else {
+  nextHref = undefined;
+  nextLabel = '';
+}
+
+const prevHref = prev !== undefined ? withBase(`/chapters/${prev.data.chapter}/`) : undefined;
+
+// Per D-58 / Pattern S4, assessment URLs are computed by template-literal convention
+// from chapter.data.chapter — chapter pages never read the assessments collection.
+const quizHref = withBase(`/assessments/${chapter.data.chapter}-quiz/`);
+const challengeHref = withBase(`/assessments/${chapter.data.chapter}-challenge/`);
+---
+<nav aria-label="Chapter navigation" class="mt-12 bg-[var(--color-surface)] p-6 flex flex-col gap-4">
+  <div class="flex flex-row gap-4">
+    <a
+      href={quizHref}
+      class="text-[var(--color-accent)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+    >
+      Take the chapter quiz
+    </a>
+    <a
+      href={challengeHref}
+      class="text-[var(--color-accent)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+    >
+      Take the challenge quiz
+    </a>
+  </div>
+  <div class="flex flex-row justify-between">
+    {prevHref && (
+      <a
+        href={prevHref}
+        class="text-[var(--color-accent)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+      >
+        ← Previous chapter
+      </a>
+    )}
+    {nextHref && (
+      <a
+        href={nextHref}
+        class="text-[var(--color-accent)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+      >
+        {nextLabel}
+      </a>
+    )}
+  </div>
+</nav>

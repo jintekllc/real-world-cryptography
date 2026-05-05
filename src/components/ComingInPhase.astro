@@ -1,0 +1,37 @@
+---
+import { withBase } from '~/lib/url';
+
+interface Props {
+  routeName: string;
+  phase: number;
+  description?: string;
+  nextHref?: string;
+  nextLabel?: string;
+}
+const { routeName, phase, description, nextHref, nextLabel } = Astro.props;
+---
+<section class="bg-[var(--color-surface)] p-8 -mx-6 sm:mx-0">
+  <h1 class="text-3xl font-semibold">{routeName}</h1>
+  <p class="text-sm text-[var(--color-muted)] mt-2">Ships in Phase {phase}.</p>
+  {description && (
+    <p class="mt-6 leading-relaxed">{description}</p>
+  )}
+  <p class="mt-8">
+    <a
+      href={withBase('/')}
+      class="text-[var(--color-accent)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+    >
+      ← Back to home
+    </a>
+  </p>
+  {nextHref && nextLabel && (
+    <p class="mt-4">
+      <a
+        href={nextHref}
+        class="text-[var(--color-accent)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+      >
+        {nextLabel}
+      </a>
+    </p>
+  )}
+</section>

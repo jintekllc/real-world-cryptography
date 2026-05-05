@@ -1,0 +1,20 @@
+---
+import { withBase } from '~/lib/url';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  chapter: CollectionEntry<'chapters'>;
+}
+const { chapter } = Astro.props;
+---
+<a
+  href={withBase(`/chapters/${chapter.data.chapter}/`)}
+  class="block bg-[var(--color-surface)] p-4 hover:outline hover:outline-1 hover:outline-[var(--color-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+>
+  <div class="flex items-baseline gap-2 text-sm text-[var(--color-muted)]">
+    <span>{chapter.data.chapter}</span>
+    <span aria-hidden="true">·</span>
+    <span>Part {chapter.data.part}</span>
+  </div>
+  <h3 class="mt-1 text-xl font-semibold text-[var(--color-fg)]">{chapter.data.title}</h3>
+</a>
