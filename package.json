@@ -13,7 +13,8 @@
     "preview": "astro preview",
     "check": "astro sync && astro check",
     "astro": "astro",
-    "gates": "bash scripts/gates.sh"
+    "gates": "bash scripts/gates.sh",
+    "gates:dist": "pnpm build && bash scripts/gates.sh"
   },
   "dependencies": {
     "@astrojs/svelte": "8.1.0",

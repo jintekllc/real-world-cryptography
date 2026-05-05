@@ -42,12 +42,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run chokepoint gates (G1-G4)
-        # Phase 2 SCHM-07 + LIB-01..03 enforcement:
+      - name: Run chokepoint gates (G1-G5)
+        # Phase 2 SCHM-07 + LIB-01..03 + Phase 3 PAGE-05 + D-61 enforcement:
         # G1 — localStorage chokepoint (D-33)
-        # G2 — astro:content chokepoint (LIB-01)
+        # G2 — astro:content chokepoint (LIB-01, D-60 Phase 3 relaxation)
+        # G2b — pages may not read questions/assessments (D-29, D-60)
         # G3 — no Astro.glob() (D-41)
         # G4 — z from astro/zod, not astro:content (D-39)
+        # G5 — no <script> / no client:* in src/pages/, src/components/, src/layouts/
+        # G6 — SKIPS pre-build (no dist/ yet); re-run after build below.
         # Exit non-zero on any violation; CI fails before astro check.
         run: bash scripts/gates.sh
 
@@ -62,3 +65,10 @@ jobs:
         # broken imports inside .astro files only loaded at build time).
         # No artifact upload — this run is purely a gate (D-20:: no preview deploy).
         run: pnpm exec astro build
+
+      - name: Run post-build gate (G6)
+        # Phase 3 PAGE-05 + D-61 enforcement:
+        # G6 — zero .js/.mjs in dist/ AND every Phase 3 route emitted.
+        # Re-runs gates.sh now that dist/ exists; G6 SKIPped during the
+        # earlier "Run chokepoint gates" step because dist/ wasn't built yet.
+        run: bash scripts/gates.sh

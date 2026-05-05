@@ -15,6 +15,10 @@
 #                        or getCollection('assessments') — chokepoint preserved
 #   G3  (D-41):         no Astro.glob() anywhere
 #   G4  (D-39):         no `import { z } from 'astro:content'` (use astro/zod)
+#   G5  (D-61, PAGE-05): no <script> blocks and no client:* directives in
+#                        src/pages/, src/components/, src/layouts/ (Phase 3 zero-JS)
+#   G6  (D-61, PAGE-05): post-build assertion — zero .js/.mjs in dist/
+#                        AND every Phase 3 route emitted
 #
 # Exit codes:
 #   0 — all four gates pass (no violations)
@@ -135,11 +139,150 @@ else
 fi
 
 # -----------------------------------------------------------------------------
+# Gate G5 (Phase 3): No client:* directives or <script> blocks in src/
+# -----------------------------------------------------------------------------
+# Rationale: D-61 + PAGE-05 — Phase 3 ships zero JS. Any client:* directive
+# or <script> block in src/pages/, src/components/, or src/layouts/ violates
+# the zero-JS guarantee. Phase 4+ will narrow this gate to "non-quiz routes
+# only" by excluding src/pages/assessments/[assessmentId]/ etc.
+#
+# Implementation note: two simpler positive checks (one for client:* and one
+# for script blocks) are easier to debug than a single combined regex. Each
+# grep is scoped to the three Phase-3-relevant directories.
+echo "  [G5] no client:* / no script in Phase 3 source (D-61, PAGE-05)"
+G5a_OUT=$(grep -rEn 'client:(load|idle|visible|media|only)' src/pages/ src/components/ src/layouts/ 2>/dev/null || true)
+G5b_OUT=$(grep -rn 'script' src/pages/ src/components/ src/layouts/ 2>/dev/null \
+  | grep -E '<script' || true)
+G5_FAIL=0
+if [ -n "$G5a_OUT" ]; then
+  echo "    FAIL: client:* directive found:"
+  echo "$G5a_OUT" | sed 's/^/      /'
+  G5_FAIL=1
+  FAIL=1
+fi
+if [ -n "$G5b_OUT" ]; then
+  echo "    FAIL: script element found:"
+  echo "$G5b_OUT" | sed 's/^/      /'
+  G5_FAIL=1
+  FAIL=1
+fi
+if [ "$G5_FAIL" -eq 0 ]; then
+  echo "    OK"
+fi
+
+# -----------------------------------------------------------------------------
+# Gate G6 (Phase 3): Post-build — no HTML loads JS + Phase 3 routes emitted
+# -----------------------------------------------------------------------------
+# PAGE-05 literal contract: "the network panel shows no JS bundles loaded for
+# non-quiz routes." The assertion is about what HTML *references*, not what
+# files *exist* in dist/. The @astrojs/svelte integration (locked in Phase 1
+# for Phase 4's QuizRunner) emits a 24KB Svelte runtime to dist/_astro/ even
+# when no Phase 3 page uses `client:*` — but if no HTML <script src> or
+# <link rel> points at it, the runtime is dead bundle weight, not loaded JS.
+# Phase 3 form: zero `.js`/`.mjs` references in any emitted HTML.
+# Phase 4+ form: same, with quiz routes allow-listed once QuizRunner ships.
+#
+# Route enumeration is driven by `dist/<base>/chapters/` directory listing —
+# we discover every chXX subdirectory Astro actually emitted, then assert that:
+#   - chapters/{ch}/index.html exists for each emitted chapter
+#   - assessments/{ch}-quiz/index.html exists (for ch01..ch16 only — ch00 maps
+#     to assessments/hello-crypto-quiz/ per D-49)
+#   - assessments/{ch}-challenge/index.html exists (same — ch01..ch16)
+# This loop catches per-chapter dropouts (e.g., a filter bug that excludes
+# ch07-quiz) that a hand-listed subset would miss.
+#
+# Requires `pnpm build` to have run first; SKIPS quietly if dist/ does not exist
+# (so `pnpm gates` (pre-build) and `pnpm gates:dist` (post-build) share gates.sh).
+echo "  [G6] no HTML loads JS + Phase 3 route enumeration (PAGE-05, PAGE-04)"
+if [ -d "dist" ]; then
+  G6_JS_REFS=$(grep -rEln '<script[^>]+src=|<link[^>]+rel="modulepreload"|\.m?js"' dist --include='*.html' 2>/dev/null || true)
+  G6_FAIL=0
+  if [ -n "$G6_JS_REFS" ]; then
+    echo "    FAIL: HTML pages load JS bundles — PAGE-05 / D-61 violated:"
+    echo "$G6_JS_REFS" | sed 's/^/      /'
+    G6_FAIL=1
+    FAIL=1
+  fi
+  # Resolve dist/ to whichever subdir Astro emits ('' or 'real-world-cryptography'
+  # depending on base config). Astro 6 with base: '/real-world-cryptography' emits
+  # dist/<base>/index.html.
+  DIST_ROOT="dist"
+  if [ -f "dist/real-world-cryptography/index.html" ]; then
+    DIST_ROOT="dist/real-world-cryptography"
+  fi
+  # Cross-cutting (non-per-chapter) routes — hand-listed because they don't
+  # vary per chapter. 1 homepage + 1 chapter index + 5 assessments + 1 fixture
+  # + 1 coding-project + 1 reset = 10 paths.
+  REQUIRED_FIXED_ROUTES=(
+    "index.html"
+    "chapters/index.html"
+    "assessments/part-1-test/index.html"
+    "assessments/part-1-challenge/index.html"
+    "assessments/part-2-test/index.html"
+    "assessments/part-2-challenge/index.html"
+    "assessments/final-exam/index.html"
+    "assessments/hello-crypto-quiz/index.html"
+    "coding-project/index.html"
+    "reset/index.html"
+  )
+  ROUTE_COUNT=0
+  for r in "${REQUIRED_FIXED_ROUTES[@]}"; do
+    if [ ! -f "$DIST_ROOT/$r" ]; then
+      echo "    FAIL: missing emitted route: $DIST_ROOT/$r"
+      G6_FAIL=1
+      FAIL=1
+    else
+      ROUTE_COUNT=$((ROUTE_COUNT + 1))
+    fi
+  done
+  # Per-chapter route enumeration: discover every chXX directory Astro emitted
+  # under dist/<base>/chapters/, then assert quiz+challenge routes for each
+  # cohort chapter (ch01..ch16). ch00 is excluded from quiz/challenge enumeration
+  # because its assessment URL is /assessments/hello-crypto-quiz/ (D-49).
+  if [ -d "$DIST_ROOT/chapters" ]; then
+    for chdir in "$DIST_ROOT"/chapters/ch*/; do
+      [ -d "$chdir" ] || continue
+      ch=$(basename "$chdir")
+      # 1) assert chapter detail HTML
+      if [ ! -f "$chdir/index.html" ]; then
+        echo "    FAIL: missing emitted route: $chdir/index.html"
+        G6_FAIL=1
+        FAIL=1
+      else
+        ROUTE_COUNT=$((ROUTE_COUNT + 1))
+      fi
+      # 2) assert per-chapter quiz + challenge for cohort chapters (ch01..ch16)
+      if [ "$ch" != "ch00" ]; then
+        for kind in quiz challenge; do
+          path="$DIST_ROOT/assessments/${ch}-${kind}/index.html"
+          if [ ! -f "$path" ]; then
+            echo "    FAIL: missing emitted route: $path"
+            G6_FAIL=1
+            FAIL=1
+          else
+            ROUTE_COUNT=$((ROUTE_COUNT + 1))
+          fi
+        done
+      fi
+    done
+  else
+    echo "    FAIL: missing emitted directory: $DIST_ROOT/chapters/"
+    G6_FAIL=1
+    FAIL=1
+  fi
+  if [ "$G6_FAIL" -eq 0 ]; then
+    echo "    OK ($ROUTE_COUNT routes verified, no HTML loads JS)"
+  fi
+else
+  echo "    SKIP (dist/ not built — run 'pnpm gates:dist' to build first)"
+fi
+
+# -----------------------------------------------------------------------------
 # Final report
 # -----------------------------------------------------------------------------
 echo ""
 if [ "$FAIL" -eq 0 ]; then
-  echo "==> All chokepoint gates passed (G1, G2, G2b, G3, G4)"
+  echo "==> All chokepoint gates passed (G1, G2, G2b, G3, G4, G5, G6)"
   exit 0
 else
   echo "==> CHOKEPOINT GATE FAILURE — see violations above" >&2
