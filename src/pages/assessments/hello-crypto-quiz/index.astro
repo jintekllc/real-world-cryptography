@@ -1,11 +1,8 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import ComingInPhase from '~/components/ComingInPhase.astro';
+import QuizRunner from '~/components/quiz/QuizRunner.svelte';
 ---
 <BaseLayout title="Hello Crypto Quiz — Real-World Cryptography Course">
-  <ComingInPhase
-    routeName="Hello Crypto Quiz"
-    phase={4}
-    description="Schema-exercising fixture from Phase 2."
-  />
+  <h1 class="text-3xl font-semibold">Hello Crypto Quiz</h1>
+  <QuizRunner client:visible assessmentId="hello-crypto-quiz" />
 </BaseLayout>

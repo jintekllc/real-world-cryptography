@@ -1,11 +1,7 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import ComingInPhase from '~/components/ComingInPhase.astro';
+import ResetProgress from '~/components/ResetProgress.svelte';
 ---
 <BaseLayout title="Reset Progress — Real-World Cryptography Course">
-  <ComingInPhase
-    routeName="Reset Progress"
-    phase={4}
-    description="Clear all locally-saved attempts and scores."
-  />
+  <ResetProgress client:visible />
 </BaseLayout>
