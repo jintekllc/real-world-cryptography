@@ -151,8 +151,12 @@ fi
 # grep is scoped to the three Phase-3-relevant directories.
 echo "  [G5] no client:* / no script in Phase 3 source (D-61, PAGE-05)"
 G5a_OUT=$(grep -rEn 'client:(load|idle|visible|media|only)' src/pages/ src/components/ src/layouts/ 2>/dev/null || true)
-G5b_OUT=$(grep -rn 'script' src/pages/ src/components/ src/layouts/ 2>/dev/null \
-  | grep -E '<script' || true)
+# G5b narrowed (Phase 4 wave-2 prep, D-86 partial): the <script> ban applies to
+# .astro files only — .svelte files use <script> as their standard component
+# syntax (Svelte runes live there). The full G5 narrowing (G5a removal + this
+# G5b scope) is finished in plan 04-05; this minimal narrowing unblocks Wave 2's
+# leaf .svelte components without changing G5a's behavior on .astro files.
+G5b_OUT=$(grep -rn '<script' src/pages/ src/components/ src/layouts/ --include='*.astro' 2>/dev/null || true)
 G5_FAIL=0
 if [ -n "$G5a_OUT" ]; then
   echo "    FAIL: client:* directive found:"
