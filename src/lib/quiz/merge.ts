@@ -12,7 +12,8 @@
 //   - first-ever attempt for an assessment seeds both `best` and `recent[0]`
 //     with the same record
 //
-// Phase 7 will Vitest this directly — keep it pure (no localStorage, no DOM).
+// Phase 7 will Vitest this directly — keep it pure (no browser storage I/O,
+// no DOM); the chokepoint module owns all real persistence.
 
 import type { ProgressV1, AttemptRecord, AssessmentProgress } from '~/lib/types';
 

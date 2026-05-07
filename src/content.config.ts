@@ -121,6 +121,10 @@ const assessmentSchema = z.object({
   ]),
   passThreshold: z.number().min(0).max(1),           // 0.7, 0.75, 0.8
   questionIds: z.array(z.string().regex(/^ch\d{2}-q\d{2}$/)).min(1),
+  // D-95: opt-in field; Phase 5 sets 'end-only' on final-exam without
+  // re-touching QuizRunner. Optional (not .default()) so existing fixtures
+  // validate unchanged and Phase 4 callers default at the call site.
+  feedbackMode: z.enum(['per-question', 'end-only']).optional(),
 });
 
 // `chapters` — one Markdown file per chapter (D-37 fixture is ch00-hello-crypto)
