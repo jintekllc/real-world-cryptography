@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { Question, Answer, GradeResult, Assessment, Verdict, AttemptRecord } from '~/lib/types';
-  import { questionSource } from '~/lib/questionSource';
   import { grader } from '~/lib/grader';
   import { safeRead, safeWrite, ProgressV1Schema } from '~/lib/progress';
   import { scoreFromVerdicts } from '~/lib/quiz/score';
@@ -16,20 +15,18 @@
   import FeedbackPanel from './FeedbackPanel.svelte';
   import ReviewScreen from './ReviewScreen.svelte';
 
-  let { assessmentId, codeBlockHtmlByQid = {} }: {
-    assessmentId: string;
-    codeBlockHtmlByQid?: Record<string, string>;     // D-94 — Wave 4 page shells supply this
+  let { questions, assessment, codeBlockHtmlByQid = {} }: {
+    questions: Question[];                            // server-fetched in page frontmatter
+    assessment: Assessment;                           // server-fetched; non-nullable (page falls back to ComingInPhase when null)
+    codeBlockHtmlByQid?: Record<string, string>;      // D-94 — page shells supply this
   } = $props();
 
   // ===========================================================================
-  // State
+  // State (questions + assessment come from props — synchronously available at mount)
   // ===========================================================================
-  let questions = $state<Question[]>([]);
-  let assessment = $state<Assessment | null>(null);
-  let loaded = $state(false);
   let cursor = $state(0);
-  let answers = $state<(Answer | null)[]>([]);
-  let results = $state<(GradeResult | null)[]>([]);
+  let answers = $state<(Answer | null)[]>(new Array(questions.length).fill(null));
+  let results = $state<(GradeResult | null)[]>(new Array(questions.length).fill(null));
   let phase = $state<'answering' | 'graded' | 'review'>('answering');
   // Pending text from Short/Code's onSubmitText — held until self-verdict locks
   // (or undefined if the question is autoGrade and resolves immediately).
@@ -48,28 +45,11 @@
   let total = $derived(questions.length);
   let current = $derived<Question | undefined>(questions[cursor]);
   let isLast = $derived(cursor === total - 1);
-  let immediateFeedback = $derived(assessment?.feedbackMode !== 'end-only');
+  let immediateFeedback = $derived(assessment.feedbackMode !== 'end-only');
   let nextLabel = $derived(isLast ? 'Finish →' : 'Next →');
   let codeHtmlForCurrent = $derived(
     current !== undefined ? (codeBlockHtmlByQid[current.id] ?? '') : '',
   );
-
-  // ===========================================================================
-  // Mount: load questions + assessment
-  // ===========================================================================
-  $effect(() => {
-    void (async () => {
-      const [q, a] = await Promise.all([
-        questionSource.getByAssessment(assessmentId),
-        questionSource.getAssessment(assessmentId),
-      ]);
-      questions = q;
-      assessment = a;
-      answers = new Array(q.length).fill(null);
-      results = new Array(q.length).fill(null);
-      loaded = true;
-    })();
-  });
 
   // ===========================================================================
   // Post-grade focus management (QUIZ-09 keyboard contract).
@@ -184,7 +164,6 @@
   }
 
   async function finish(): Promise<void> {
-    if (assessment === null) return;
     const perQuestion: Record<string, Verdict> = {};
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
@@ -203,7 +182,7 @@
     };
     const existing = safeRead('rwc:progress:v1', ProgressV1Schema)
       ?? { version: 1 as const, assessments: {} };
-    const merged = mergeAttempt(existing, assessmentId, attempt);
+    const merged = mergeAttempt(existing, assessment.id, attempt);
     safeWrite('rwc:progress:v1', merged, ProgressV1Schema);    // D-81: silent on failure
     phase = 'review';
   }
@@ -247,10 +226,7 @@
 </script>
 
 <div bind:this={rootEl}>
-  {#if !loaded}
-    <!-- Pre-data state — no spinner, no skeleton (UI-SPEC empty/loading). -->
-    <div></div>
-  {:else if questions.length === 0}
+  {#if questions.length === 0}
     <section class="bg-[var(--color-surface)] p-8 -mx-6 sm:mx-0">
       <h2 class="text-xl font-semibold">No questions yet.</h2>
       <p class="mt-2 leading-relaxed">
@@ -258,14 +234,14 @@
       </p>
       <p class="mt-8">
         <a
-          href={chapterHrefFromAssessmentId(assessmentId)}
+          href={chapterHrefFromAssessmentId(assessment.id)}
           class="text-[var(--color-accent)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
         >
           ← Back to chapter
         </a>
       </p>
     </section>
-  {:else if phase === 'review' && assessment !== null}
+  {:else if phase === 'review'}
     <ReviewScreen
       questions={questions}
       answers={answers}
