@@ -1,0 +1,21 @@
+{
+  "chapterId": "ch10",
+  "questions": [
+    {
+      "id": "ch10-q90",
+      "chapterId": "ch10",
+      "kind": "mc",
+      "prompt": "PLACEHOLDER (Phase 5 stub — Phase 6 generation will replace this from the chapter PDF). Which statement best describes the focus of Chapter 10: End-to-end encryption?",
+      "choices": [
+        "Stub option A",
+        "Stub option B",
+        "Stub option C",
+        "Stub option D"
+      ],
+      "answerIndex": 0,
+      "explanation": "Phase 5 stub bank — replaced by Phase 6's PDF-driven generation.",
+      "tags": ["stub", "phase-5"],
+      "difficulty": "easy"
+    }
+  ]
+}

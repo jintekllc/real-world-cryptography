@@ -1,0 +1,11 @@
+{
+  "id": "part-2-challenge",
+  "title": "Part 2 challenge",
+  "kind": "part-challenge",
+  "passThreshold": 0.75,
+  "questionIds": [
+    "ch09-q80",
+    "ch12-q80",
+    "ch16-q80"
+  ]
+}

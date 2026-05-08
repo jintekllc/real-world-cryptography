@@ -1,0 +1,12 @@
+{
+  "id": "ch02-hash-tree",
+  "title": "Implement a Merkle tree with proof generation and verification",
+  "summary": "Build a Merkle tree over a list of byte strings using SHA-256. Generate inclusion proofs for any leaf and verify them against the root. Include benchmarks against tree depth.",
+  "recommendedChapters": ["ch02"],
+  "deliverables": [
+    "Tree builds from a 10 000-element input in under 1 second",
+    "Inclusion proofs verify in O(log n) hashes",
+    "Property test: every generated proof verifies against its root"
+  ],
+  "difficulty": "normal"
+}

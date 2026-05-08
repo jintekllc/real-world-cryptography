@@ -1,0 +1,12 @@
+{
+  "id": "ch05-ecdh-handshake",
+  "title": "X25519 ECDH handshake over a unix socket with HKDF key derivation",
+  "summary": "Two processes perform an X25519 key exchange over a local socket, derive symmetric keys via HKDF-SHA256, and exchange one authenticated message under the derived key. No certificate trust — assume the sockets are local.",
+  "recommendedChapters": ["ch05", "ch08"],
+  "deliverables": [
+    "Two binaries (initiator + responder) that complete the handshake",
+    "Derived key passes a known-answer test against an HKDF reference vector",
+    "Authenticated message decrypts correctly on the receiver"
+  ],
+  "difficulty": "normal"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "part-2-required",
+  "title": "Part 2 test",
+  "kind": "part-test",
+  "passThreshold": 0.75,
+  "questionIds": [
+    "ch09-q90",
+    "ch10-q90",
+    "ch11-q90",
+    "ch12-q90",
+    "ch13-q90",
+    "ch14-q90",
+    "ch15-q90",
+    "ch16-q90"
+  ]
+}

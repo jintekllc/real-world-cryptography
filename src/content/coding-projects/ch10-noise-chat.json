@@ -1,0 +1,12 @@
+{
+  "id": "ch10-noise-chat",
+  "title": "Two-party encrypted chat using a Noise XX handshake",
+  "summary": "Implement the Noise XX pattern from scratch (or against a vetted reference) to bootstrap an authenticated channel between two peers, then layer a line-based chat protocol on top. Forward secrecy required; write a short doc on what XX provides versus what NN does not.",
+  "recommendedChapters": ["ch10", "ch05", "ch04"],
+  "deliverables": [
+    "Two peers complete the XX handshake and exchange chat lines under transport keys",
+    "Replay of a captured chat-line ciphertext is rejected",
+    "Doc: forward-secrecy property, identity-hiding property, what XX provides over NN"
+  ],
+  "difficulty": "hard"
+}

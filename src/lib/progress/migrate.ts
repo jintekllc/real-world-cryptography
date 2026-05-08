@@ -9,8 +9,8 @@
 // (index.ts) owns the try/catch around storage I/O; this module owns the
 // schema check.
 
-import { ProgressV1Schema, MetaV1Schema } from './schema';
-import type { ProgressV1, MetaV1 } from './schema';
+import { ProgressV1Schema, MetaV1Schema, ProjectsV1Schema } from './schema';
+import type { ProgressV1, MetaV1, ProjectsV1 } from './schema';
 
 /**
  * Migrate a raw ProgressV1 candidate (already JSON.parsed) through any
@@ -34,5 +34,16 @@ export function migrateProgress(raw: unknown): ProgressV1 | null {
  */
 export function migrateMeta(raw: unknown): MetaV1 | null {
   const parsed = MetaV1Schema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
+}
+
+/**
+ * Migrate a raw ProjectsV1 candidate. v1 -> v1 is a no-op (mirrors migrateProgress).
+ *
+ * @param raw - Unknown JSON-parsed value (caller's responsibility to JSON.parse)
+ * @returns ProjectsV1 on success, null on schema mismatch
+ */
+export function migrateProjects(raw: unknown): ProjectsV1 | null {
+  const parsed = ProjectsV1Schema.safeParse(raw);
   return parsed.success ? parsed.data : null;
 }

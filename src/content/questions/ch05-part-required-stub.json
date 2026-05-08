@@ -1,0 +1,21 @@
+{
+  "chapterId": "ch05",
+  "questions": [
+    {
+      "id": "ch05-q90",
+      "chapterId": "ch05",
+      "kind": "mc",
+      "prompt": "PLACEHOLDER (Phase 5 stub — Phase 6 generation will replace this from the chapter PDF). Which statement best describes the focus of Chapter 5: Key exchanges?",
+      "choices": [
+        "Stub option A",
+        "Stub option B",
+        "Stub option C",
+        "Stub option D"
+      ],
+      "answerIndex": 0,
+      "explanation": "Phase 5 stub bank — replaced by Phase 6's PDF-driven generation.",
+      "tags": ["stub", "phase-5"],
+      "difficulty": "easy"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "ch14-pq-kem-explorer",
+  "title": "Post-quantum KEM explorer: ML-KEM-768 against X25519",
+  "summary": "Use a vetted ML-KEM-768 implementation to encapsulate and decapsulate a shared secret, then compare key sizes, ciphertext sizes, and operation latencies against an X25519 baseline you wrote in the ch05 project. Write up the operational tradeoffs.",
+  "recommendedChapters": ["ch14", "ch05", "ch15"],
+  "deliverables": [
+    "Working ML-KEM-768 encap/decap round-trip using a vetted library",
+    "Benchmark table: pubkey size, ciphertext size, encap latency, decap latency vs X25519",
+    "Short writeup of what a hybrid KEM (X25519 + ML-KEM) buys you in 2026"
+  ],
+  "difficulty": "stretch"
+}

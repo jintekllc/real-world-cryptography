@@ -1,0 +1,12 @@
+{
+  "id": "ch04-aead-cli",
+  "title": "Build a chunked file-encryption CLI with AES-GCM",
+  "summary": "Encrypt and decrypt arbitrary files in fixed-size chunks using AES-256-GCM. Authenticate the chunk index so reordering or truncation is detectable. Single-binary CLI; no network, no key management beyond a passphrase.",
+  "recommendedChapters": ["ch04", "ch08"],
+  "deliverables": [
+    "Round-trip encrypt + decrypt on a 100 MB file",
+    "Authenticate the chunk index so reordering fails the decrypt",
+    "README documenting the threat model and the AEAD invariants"
+  ],
+  "difficulty": "easy"
+}

@@ -69,6 +69,26 @@ export const MetaV1Schema = z.object({
 });
 
 // =============================================================
+// ProjectRecord (D-98.2) — per-project started/completed marks + ISO timestamp
+// =============================================================
+export const ProjectRecordSchema = z.object({
+  started: z.boolean(),
+  completed: z.boolean(),
+  updatedAt: z.string().datetime(),                    // ISO 8601 from new Date().toISOString()
+});
+
+// =============================================================
+// ProjectsV1 (D-98.2) — keyed by projectId from the codingProjects collection
+// =============================================================
+export const ProjectsV1Schema = z.object({
+  version: z.literal(1),
+  projects: z.record(
+    z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),     // kebab-case project ids; matches CodingProject.id (Pitfall 11.12 — z.record always two args)
+    ProjectRecordSchema,
+  ),
+});
+
+// =============================================================
 // Inferred types (re-exported by src/lib/types.ts)
 // =============================================================
 
@@ -79,3 +99,5 @@ export type AttemptRecord = z.infer<typeof AttemptRecordSchema>;
 export type AssessmentProgress = z.infer<typeof AssessmentProgressSchema>;
 export type ProgressV1 = z.infer<typeof ProgressV1Schema>;
 export type MetaV1 = z.infer<typeof MetaV1Schema>;
+export type ProjectRecord = z.infer<typeof ProjectRecordSchema>;
+export type ProjectsV1 = z.infer<typeof ProjectsV1Schema>;

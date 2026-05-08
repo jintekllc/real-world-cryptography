@@ -16,5 +16,6 @@
 // runtime.
 
 export type { Chapter, QuestionBank, Question, Assessment } from '~/content.config';
+export type { CodingProject } from '~/content.config';
 export type { Answer, GradeResult, Verdict } from '~/lib/grader';
-export type { ProgressV1, MetaV1, AssessmentProgress, AttemptRecord } from '~/lib/progress/schema';
+export type { ProgressV1, MetaV1, ProjectsV1, ProjectRecord, AssessmentProgress, AttemptRecord } from '~/lib/progress/schema';

@@ -127,6 +127,22 @@ const assessmentSchema = z.object({
   feedbackMode: z.enum(['per-question', 'end-only']).optional(),
 });
 
+// =============================================================
+// CodingProject (D-98.1, D-98.4, D-99.5) — Phase 5 fourth collection
+// =============================================================
+// Each entry is one self-contained JSON file under src/content/coding-projects/.
+// Schema fields locked in 05-CONTEXT.md D-98.1 + UI-SPEC.md §Coding-project page:
+//   - id: kebab-case (matches ProjectsV1Schema's record key regex in src/lib/progress/schema.ts)
+//   - title, summary, recommendedChapters[], deliverables[], difficulty
+const codingProjectSchema = z.object({
+  id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  recommendedChapters: z.array(z.string().regex(/^ch\d{2}$/)).min(1),
+  deliverables: z.array(z.string().min(1)).min(1),
+  difficulty: z.enum(['easy', 'normal', 'hard', 'stretch']),
+});
+
 // `chapters` — one Markdown file per chapter (D-37 fixture is ch00-hello-crypto)
 const chapters = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/chapters' }),
@@ -151,7 +167,16 @@ const assessments = defineCollection({
   schema: assessmentSchema,
 });
 
-export const collections = { chapters, questions, assessments };
+// `codingProjects` — one JSON file per project. Hydrated by CodingProjectToggles.svelte
+// island via the [data-rwc-project-toggle] slot pattern (D-99.5). Reads happen ONLY
+// through ~/lib/codingProjectSource.ts (Plan 02 — G2b regex extension forbids
+// getCollection('codingProjects') in src/pages/).
+const codingProjects = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/coding-projects' }),
+  schema: codingProjectSchema,
+});
+
+export const collections = { chapters, questions, assessments, codingProjects };
 
 // Note (Conflict C-2 resolution): Astro 6's getCollection() and getEntry()
 // already return Promise<...>. The QuestionSource v1 implementation
@@ -168,3 +193,4 @@ export type Chapter = z.infer<typeof chapterSchema>;
 export type QuestionBank = z.infer<typeof questionBankSchema>;
 export type Question = z.infer<typeof questionSchema>;
 export type Assessment = z.infer<typeof assessmentSchema>;
+export type CodingProject = z.infer<typeof codingProjectSchema>;
