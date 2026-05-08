@@ -1,8 +1,19 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import ComingInPhase from '~/components/ComingInPhase.astro';
 import QuizRunner from '~/components/quiz/QuizRunner.svelte';
+import { questionSource } from '~/lib/questionSource';
+
+const questions = await questionSource.getByAssessment('hello-crypto-quiz');
+const assessment = await questionSource.getAssessment('hello-crypto-quiz');
 ---
 <BaseLayout title="Hello Crypto Quiz — Real-World Cryptography Course">
-  <h1 class="text-3xl font-semibold">Hello Crypto Quiz</h1>
-  <QuizRunner client:visible assessmentId="hello-crypto-quiz" />
+  {assessment !== null ? (
+    <Fragment>
+      <h1 class="text-3xl font-semibold">Hello Crypto Quiz</h1>
+      <QuizRunner client:visible questions={questions} assessment={assessment} />
+    </Fragment>
+  ) : (
+    <ComingInPhase routeName="Hello Crypto Quiz" phase={4} description="Required quiz for the introduction." />
+  )}
 </BaseLayout>

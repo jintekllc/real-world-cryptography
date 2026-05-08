@@ -55,27 +55,31 @@ export async function getStaticPaths() {
   // Per-id chokepoint check via questionSource.getAssessment (G2b allowance) — gives each
   // generated path a `hasRealAssessment` flag the page body branches on.
   return Promise.all([...partAndFinal, ...perChapter].map(async (entry) => {
-    const real = await questionSource.getAssessment(entry.id);
+    const [assessment, questions] = await Promise.all([
+      questionSource.getAssessment(entry.id),
+      questionSource.getByAssessment(entry.id),
+    ]);
     return {
       params: { assessmentId: entry.id },
       props: {
         routeName: entry.routeName,
         phase: entry.phase,
         description: entry.description,
-        hasRealAssessment: real !== null,
+        hasRealAssessment: assessment !== null,
+        assessment,
+        questions,
       },
     };
   }));
 }
 
-const { routeName, phase, description, hasRealAssessment } = Astro.props;
-const { assessmentId } = Astro.params;
+const { routeName, phase, description, hasRealAssessment, assessment, questions } = Astro.props;
 ---
 <BaseLayout title={`${routeName} — Real-World Cryptography Course`}>
-  {hasRealAssessment ? (
+  {hasRealAssessment && assessment !== null ? (
     <Fragment>
       <h1 class="text-3xl font-semibold">{routeName}</h1>
-      <QuizRunner client:visible assessmentId={assessmentId} />
+      <QuizRunner client:visible questions={questions} assessment={assessment} />
     </Fragment>
   ) : (
     <ComingInPhase routeName={routeName} phase={phase} description={description} />
