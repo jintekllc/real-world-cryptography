@@ -1,0 +1,47 @@
+---
+// src/components/CodingProjectCard.astro
+//
+// Server-rendered card for /coding-project/index.astro (D-98). Renders title +
+// DifficultyChip + summary + recommended-chapters + suggested-deliverables +
+// an empty per-project toggle slot. The CodingProjectToggles island (Plan
+// 05-04) hydrates the slot with two checkboxes.
+//
+// NOT wrapped in <a> (D-98.4 + UI-SPEC §Coding-project page) — the card has no
+// destination; its toggles ARE the interaction.
+//
+// Copy strings are locked verbatim per UI-SPEC §Coding-project page.
+
+import type { CodingProject } from '~/lib/types';
+import DifficultyChip from '~/components/DifficultyChip.astro';
+
+interface Props {
+  project: CodingProject;
+}
+const { project } = Astro.props;
+
+const recommendedCsv = project.recommendedChapters.join(', ');
+---
+<article class="bg-[var(--color-surface)] p-6 -mx-6 sm:mx-0">
+  <div class="flex items-baseline gap-2">
+    <h2 class="text-xl font-semibold text-[var(--color-fg)]">{project.title}</h2>
+    <DifficultyChip difficulty={project.difficulty} />
+  </div>
+
+  <p class="mt-4 leading-relaxed text-[var(--color-fg)]">{project.summary}</p>
+
+  <p class="mt-6 text-sm text-[var(--color-muted)]">
+    Recommended chapters: {recommendedCsv}
+  </p>
+
+  <div class="mt-4 text-sm text-[var(--color-muted)]">
+    <p>Suggested deliverables:</p>
+    <ul class="mt-1 ml-0 list-none">
+      {project.deliverables.map((d) => (
+        <li class="mt-1 text-[var(--color-muted)]"><span aria-hidden="true">·</span> {d}</li>
+      ))}
+    </ul>
+  </div>
+
+  <p class="mt-6 text-sm text-[var(--color-muted)]">Track your progress:</p>
+  <div data-rwc-project-toggle={project.id} class="mt-2"></div>
+</article>

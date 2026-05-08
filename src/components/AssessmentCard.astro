@@ -1,0 +1,55 @@
+---
+// src/components/AssessmentCard.astro
+//
+// Server-rendered card for /assessments/index.astro (D-96.2). Wraps title +
+// meta line + trailing CTA + the per-assessment badge slot in a single <a>
+// per the Phase 3 ChapterCard pattern. The ProgressBadge island (mounted in
+// BaseLayout) hydrates the badge slot.
+//
+// Copy strings are locked verbatim per UI-SPEC §/assessments/ index page.
+
+import { withBase } from '~/lib/url';
+import type { Assessment } from '~/lib/types';
+
+interface Props {
+  assessment: Assessment;
+}
+const { assessment } = Astro.props;
+
+const thresholdPct = Math.round(assessment.passThreshold * 100);
+
+// UI-SPEC card-title copy by kind:
+//   part-test       -> "Part 1 test" / "Part 2 test"  (derived from assessment.title which is locked in the fixtures)
+//   part-challenge  -> "Part 1 challenge" / "Part 2 challenge"
+//   final-exam      -> "Final exam"
+// We use assessment.title verbatim (Plan 05-01 fixtures already match the
+// UI-SPEC copy contract — "Part 1 test" not "Part 1 Test").
+const cardTitle = assessment.title;
+
+// UI-SPEC card-meta copy by kind:
+//   part-test       -> "test · {N}% to pass"
+//   part-challenge  -> "challenge · {N}% to pass"
+//   final-exam      -> "final exam · {N}% to pass"
+const kindLabel =
+  assessment.kind === 'final-exam' ? 'final exam'
+  : assessment.kind === 'part-challenge' ? 'challenge'
+  : assessment.kind === 'part-test' ? 'test'
+  : assessment.kind;                           // fallback for 'quiz' / 'challenge' (chapter quizzes — filtered upstream)
+
+// CTA verb is built from assessment.title per UI-SPEC card-CTA contract
+// (verbatim shape: <verb> <assessment-name> <arrow>).
+const ctaVerb = `Take the ${assessment.title.toLowerCase()} →`;
+---
+<a
+  href={withBase(`/assessments/${assessment.id}/`)}
+  class="block bg-[var(--color-surface)] p-6 -mx-6 sm:mx-0 hover:outline hover:outline-1 hover:outline-[var(--color-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+>
+  <div class="flex items-baseline gap-2 text-sm text-[var(--color-muted)]">
+    <span>{kindLabel}</span>
+    <span aria-hidden="true">·</span>
+    <span>{thresholdPct}% to pass</span>
+    <span data-rwc-badge={assessment.id} class="ml-auto"></span>
+  </div>
+  <h2 class="mt-1 text-xl font-semibold text-[var(--color-fg)]">{cardTitle}</h2>
+  <p class="mt-4 text-sm text-[var(--color-muted)]">{ctaVerb}</p>
+</a>

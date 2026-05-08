@@ -1,0 +1,22 @@
+---
+// src/components/DifficultyChip.astro
+//
+// Pure presentational micro-leaf: renders a difficulty pill in one of four
+// states (D-98.1; UI-SPEC §Difficulty chip color contract). All four states
+// use ONLY the locked palette — no new tokens. Padding-y uses spacing token 1
+// (4px) per UI-SPEC §Difficulty chip — the locked y-padding utility, not the
+// half-step variant.
+
+interface Props {
+  difficulty: 'easy' | 'normal' | 'hard' | 'stretch';
+}
+const { difficulty } = Astro.props;
+
+const classes = {
+  easy:    'bg-[var(--color-accent)] text-[var(--color-bg)]',
+  normal:  'bg-[var(--color-surface)] text-[var(--color-fg)] border border-[var(--color-muted-2)]',
+  hard:    'bg-[var(--color-surface)] text-[var(--color-fg)] border border-[var(--color-muted)]',
+  stretch: 'text-[var(--color-accent)] border border-[var(--color-accent)]',
+}[difficulty];
+---
+<span class={`text-sm px-2 py-1 rounded-sm ${classes}`}>{difficulty}</span>

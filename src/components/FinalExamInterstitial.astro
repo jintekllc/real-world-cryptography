@@ -1,0 +1,48 @@
+---
+// src/components/FinalExamInterstitial.astro
+//
+// Server-rendered pre-exam interstitial for /assessments/final-exam/ (D-97.5,
+// RESEARCH Pattern 1). Static, server-only — NO JS shipped on this route until
+// the student clicks the primary CTA below and lands on the runner sibling
+// route. Two-route static interstitial pattern.
+//
+// Copy strings are locked verbatim per UI-SPEC §Final-exam interstitial.
+
+import { withBase } from '~/lib/url';
+import type { Assessment } from '~/lib/types';
+
+interface Props {
+  assessment: Assessment;
+  chapterCount: number;
+}
+const { assessment, chapterCount } = Astro.props;
+
+const questionCount = assessment.questionIds.length;
+---
+<section class="bg-[var(--color-surface)] p-6 sm:p-8 -mx-6 sm:mx-0">
+  <h2 class="text-xl font-semibold text-[var(--color-fg)]">Final exam</h2>
+  <p class="mt-4 leading-relaxed text-[var(--color-fg)]">
+    {questionCount} questions across {chapterCount} chapters.
+  </p>
+  <p class="mt-2 leading-relaxed text-[var(--color-fg)]">
+    No per-question feedback — your verdict appears at the end.
+  </p>
+  <p class="mt-2 leading-relaxed text-[var(--color-fg)]">
+    ≥80% to pass.
+  </p>
+
+  <div class="mt-8 flex flex-row items-center gap-4">
+    <a
+      href={withBase('/assessments/final-exam/start/')}
+      class="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-bg)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+    >
+      Begin exam →
+    </a>
+    <a
+      href={withBase('/assessments/')}
+      class="text-[var(--color-muted)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+    >
+      ← Back to assessments
+    </a>
+  </div>
+</section>
