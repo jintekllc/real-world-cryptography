@@ -1,7 +1,8 @@
 // src/lib/progress/index.ts
 //
 // safeRead / safeWrite / clearAll own all access to window.localStorage
-// for keys 'rwc:progress:v1', 'rwc:meta:v1' (and 'rwc:notes:v1' clear-only).
+// for keys 'rwc:progress:v1', 'rwc:meta:v1', 'rwc:projects:v1' (Phase 5
+// D-99.1) — and 'rwc:notes:v1' clear-only.
 //
 // CONTRACT (D-33, D-36, LIB-03): this is the SINGLE chokepoint for
 // localStorage. No other module under src/ may read or write
@@ -35,8 +36,9 @@
 //     Zod-validates, writes, updates in-memory cache atomically.
 //     Returns false on QuotaExceededError or storage-disabled.
 //   clearAll(): boolean
-//     Removes all three rwc:*:v1 keys (including the reserved
-//     rwc:notes:v1) and clears the cache.
+//     Removes all four rwc:*:v1 keys (rwc:progress:v1, rwc:projects:v1
+//     [D-99.2 / Phase 5], rwc:meta:v1, and the reserved rwc:notes:v1)
+//     and clears the cache.
 //
 // Migration (D-35): runs ONCE per session in initOnce(). Subsequent
 // safeRead calls hit the in-memory cache. safeWrite updates both cache
@@ -48,8 +50,8 @@
 // behavior is correct (one init per page load). No fix needed.
 
 import { z } from 'astro/zod';
-import { migrateProgress, migrateMeta } from './migrate';
-import { ProgressV1Schema, MetaV1Schema } from './schema';
+import { migrateProgress, migrateMeta, migrateProjects } from './migrate';
+import { ProgressV1Schema, MetaV1Schema, ProjectsV1Schema } from './schema';
 // Note: ProgressV1 / MetaV1 type aliases are re-exported below via
 // `export type { ... } from './schema'`. No local `import type` needed
 // because the type names are not referenced inside this module body —
@@ -77,7 +79,7 @@ function getStorage(): Storage | null {
 // In-memory cache (D-35 — migration runs ONCE per session)
 // =============================================================
 
-type CacheKey = 'rwc:progress:v1' | 'rwc:meta:v1';
+type CacheKey = 'rwc:progress:v1' | 'rwc:meta:v1' | 'rwc:projects:v1';
 const cache = new Map<CacheKey, unknown>();
 let initialized = false;
 
@@ -88,13 +90,15 @@ function initOnce(): void {
   if (storage === null) return;
 
   // Read each known v1 key, validate, cache. Fail-soft on any error.
-  for (const key of ['rwc:progress:v1', 'rwc:meta:v1'] as const) {
+  for (const key of ['rwc:progress:v1', 'rwc:meta:v1', 'rwc:projects:v1'] as const) {
     try {
       const raw = storage.getItem(key);
       if (raw === null) continue;
       const parsed = JSON.parse(raw);
       const migrated =
-        key === 'rwc:progress:v1' ? migrateProgress(parsed) : migrateMeta(parsed);
+        key === 'rwc:progress:v1' ? migrateProgress(parsed)
+        : key === 'rwc:meta:v1'   ? migrateMeta(parsed)
+        : migrateProjects(parsed);
       if (migrated !== null) cache.set(key, migrated);
       else console.warn(`[progress] schema mismatch on ${key}; ignoring`);
     } catch (err) {
@@ -112,7 +116,7 @@ function initOnce(): void {
  * schema mismatch, or storage-disabled environment. Console-warns on every
  * non-`missing` failure path so dev mode surfaces issues.
  *
- * @param key - One of 'rwc:progress:v1' | 'rwc:meta:v1' (CacheKey)
+ * @param key - One of 'rwc:progress:v1' | 'rwc:meta:v1' | 'rwc:projects:v1' (CacheKey)
  * @param schema - Caller's Zod schema (re-validated against the cached value)
  * @returns Validated T on success, null on any failure path
  *
@@ -147,7 +151,7 @@ export function safeRead<T>(
  * cache atomically. Returns true on success, false on QuotaExceededError or
  * storage-disabled environment. Console-warns on every failure path.
  *
- * @param key - One of 'rwc:progress:v1' | 'rwc:meta:v1' (CacheKey)
+ * @param key - One of 'rwc:progress:v1' | 'rwc:meta:v1' | 'rwc:projects:v1' (CacheKey)
  * @param value - The value to write (must satisfy schema)
  * @param schema - Caller's Zod schema (validated BEFORE the storage write)
  * @returns true on success, false on schema fail / quota / storage-disabled
@@ -198,20 +202,28 @@ export function safeWrite<T>(
 }
 
 /**
- * Clear all rwc:*:v1 keys (including the reserved rwc:notes:v1) and clear
- * the in-memory cache. Called by the future Phase 4 reset-progress button.
+ * Clear all rwc:*:v1 keys (rwc:progress:v1, rwc:projects:v1 [D-99.2 /
+ * Phase 5], rwc:meta:v1, and the reserved rwc:notes:v1) and clear the
+ * in-memory cache. Called by the Phase 4 reset-progress button.
  *
  * @returns true on success, false on storage-disabled environment
  *
  * Note: rwc:notes:v1 is a RESERVED placeholder per D-33. Phase 2 does not
  * write it. clearAll removes it anyway as a defensive cleanup so a v2
  * NOTE-01 feature starting fresh sees no stale state from removed builds.
+ *
+ * Order note (D-99.2): rwc:meta:v1 is removed here AND immediately
+ * re-stamped by ResetProgress.svelte's wipe() via safeWrite(meta) so that
+ * studentName + firstSeenAt survive across reset and lastResetAt is fresh.
+ * The clearAll -> safeWrite(meta) ordering is the binding contract; do not
+ * reorder.
  */
 export function clearAll(): boolean {
   const storage = getStorage();
   if (storage === null) return false;
   try {
     storage.removeItem('rwc:progress:v1');
+    storage.removeItem('rwc:projects:v1');              // D-99.2 (Phase 5)
     storage.removeItem('rwc:meta:v1');
     storage.removeItem('rwc:notes:v1');                 // reserved (D-33)
     cache.clear();
@@ -223,6 +235,7 @@ export function clearAll(): boolean {
 }
 
 // Re-export schemas for callers that need the typed schema argument.
-// (Phase 4 will write `safeRead('rwc:progress:v1', ProgressV1Schema)` etc.)
-export { ProgressV1Schema, MetaV1Schema };
-export type { ProgressV1, MetaV1 } from './schema';
+// (Phase 4 callers write `safeRead('rwc:progress:v1', ProgressV1Schema)` etc.;
+// Phase 5 callers add `safeRead('rwc:projects:v1', ProjectsV1Schema)`.)
+export { ProgressV1Schema, MetaV1Schema, ProjectsV1Schema };
+export type { ProgressV1, MetaV1, ProjectsV1, ProjectRecord } from './schema';
