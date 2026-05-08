@@ -61,6 +61,13 @@ export interface QuestionSource {
   getAssessment(id: string): Promise<Assessment | null>;
 
   /**
+   * Return every assessment record. Used by /assessments/index.astro to render
+   * the listing page (D-96.2 — chapter quizzes are filtered out at the page
+   * level). Order is whatever Astro emits; the page may filter or sort.
+   */
+  getAllAssessments(): Promise<Assessment[]>;
+
+  /**
    * Return every question for a chapter, regardless of which bank file holds
    * it. v1 filters all banks where data.chapterId === chapterId and
    * concatenates their questions arrays — forward-compatible with Phase 6's
@@ -105,6 +112,11 @@ export class StaticQuestionSource implements QuestionSource {
   async getAssessment(id: string): Promise<Assessment | null> {
     const entry = await getEntry('assessments', id);
     return entry?.data ?? null;
+  }
+
+  async getAllAssessments(): Promise<Assessment[]> {
+    const entries = await getCollection('assessments');
+    return entries.map((e) => e.data);
   }
 
   async getByChapter(chapterId: string): Promise<Question[]> {

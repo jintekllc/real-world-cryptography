@@ -62,16 +62,19 @@ fi
 # -----------------------------------------------------------------------------
 # Gate G2: astro:content runtime imports only in allowed locations
 # -----------------------------------------------------------------------------
-# Rationale: LIB-01 + D-60. Runtime imports from 'astro:content' are limited to:
-#   - src/content.config.ts        (defineCollection schema authority)
-#   - src/lib/questionSource.ts    (the v1 questions/assessments wrapper)
-#   - src/pages/                   (D-60 — pages may read 'chapters' directly)
+# Rationale: LIB-01 + D-60 + D-99.1. Runtime imports from 'astro:content' are
+# limited to:
+#   - src/content.config.ts            (defineCollection schema authority)
+#   - src/lib/questionSource.ts        (the v1 questions/assessments wrapper)
+#   - src/lib/codingProjectSource.ts   (D-99.1 sibling chokepoint for codingProjects)
+#   - src/pages/                       (D-60 — pages may read 'chapters' directly)
 # Type-only imports (`import type { ... } from 'astro:content'`) are permitted
 # everywhere — they erase at compile time and don't violate the chokepoint.
 # G2b (below) further restricts pages from reading 'questions'/'assessments'.
 echo "  [G2] astro:content chokepoint (LIB-01, D-60 relaxation for src/pages/; type-only imports permitted everywhere)"
 G2_OUT=$(grep -rn "from 'astro:content'" src/ 2>/dev/null \
   | grep -v 'src/lib/questionSource.ts' \
+  | grep -v 'src/lib/codingProjectSource.ts' \
   | grep -v 'src/content.config.ts' \
   | grep -v 'src/pages/' \
   | grep -v 'import type' || true)
