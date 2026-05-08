@@ -284,6 +284,15 @@
       >
         {nextLabel}
       </button>
+    {:else if phase === 'graded' && !immediateFeedback}
+      <button
+        type="button"
+        bind:this={nextBtnEl}
+        onclick={next}
+        class="mt-4 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-bg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+      >
+        {nextLabel}
+      </button>
     {/if}
   {/if}
 </div>
