@@ -139,52 +139,41 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Gate G5 (Phase 3): No client:* directives or <script> blocks in src/
+# Gate G5 (Phase 4 narrowed): client:* allowed; <script> banned in .astro only
 # -----------------------------------------------------------------------------
-# Rationale: D-61 + PAGE-05 — Phase 3 ships zero JS. Any client:* directive
-# or <script> block in src/pages/, src/components/, or src/layouts/ violates
-# the zero-JS guarantee. Phase 4+ will narrow this gate to "non-quiz routes
-# only" by excluding src/pages/assessments/[assessmentId]/ etc.
-#
-# Implementation note: two simpler positive checks (one for client:* and one
-# for script blocks) are easier to debug than a single combined regex. Each
-# grep is scoped to the three Phase-3-relevant directories.
-echo "  [G5] no client:* / no script in Phase 3 source (D-61, PAGE-05)"
-G5a_OUT=$(grep -rEn 'client:(load|idle|visible|media|only)' src/pages/ src/components/ src/layouts/ 2>/dev/null || true)
-# G5b narrowed (Phase 4 wave-2 prep, D-86 partial): the <script> ban applies to
-# .astro files only — .svelte files use <script> as their standard component
-# syntax (Svelte runes live there). The full G5 narrowing (G5a removal + this
-# G5b scope) is finished in plan 04-05; this minimal narrowing unblocks Wave 2's
-# leaf .svelte components without changing G5a's behavior on .astro files.
+# Rationale: D-86 + PATTERNS.md "G5 narrowing" section. Phase 4 mounts three
+# Svelte islands via client:visible / client:idle directives in:
+#   - src/layouts/BaseLayout.astro     (ProgressBadge client:idle, site-wide)
+#   - src/pages/assessments/hello-crypto-quiz/index.astro   (QuizRunner)
+#   - src/pages/assessments/[assessmentId]/index.astro      (QuizRunner cond.)
+#   - src/pages/reset/index.astro      (ResetProgress)
+# These directives are LEGITIMATE — the previous Phase-3 G5a ban no longer
+# matches the contract. G5b (no inline <script> blocks in .astro pages) stays
+# in force: Astro pages must remain server-rendered shells; any per-page
+# scripting belongs in a Svelte island. The grep narrows to *.astro because
+# .svelte files NATURALLY begin with <script lang="ts"> as part of Svelte's
+# component syntax — banning <script> in .svelte would be incoherent.
+echo "  [G5] no <script> in .astro source; client:* permitted on islands (D-86, Phase 4)"
 G5b_OUT=$(grep -rn '<script' src/pages/ src/components/ src/layouts/ --include='*.astro' 2>/dev/null || true)
-G5_FAIL=0
-if [ -n "$G5a_OUT" ]; then
-  echo "    FAIL: client:* directive found:"
-  echo "$G5a_OUT" | sed 's/^/      /'
-  G5_FAIL=1
-  FAIL=1
-fi
 if [ -n "$G5b_OUT" ]; then
-  echo "    FAIL: script element found:"
+  echo "    FAIL: <script> element found in .astro file (use a Svelte island instead):"
   echo "$G5b_OUT" | sed 's/^/      /'
-  G5_FAIL=1
   FAIL=1
-fi
-if [ "$G5_FAIL" -eq 0 ]; then
+else
   echo "    OK"
 fi
 
 # -----------------------------------------------------------------------------
-# Gate G6 (Phase 3): Post-build — no HTML loads JS + Phase 3 routes emitted
+# Gate G6 (Phase 4 narrowed): route enumeration (post-build)
 # -----------------------------------------------------------------------------
-# PAGE-05 literal contract: "the network panel shows no JS bundles loaded for
-# non-quiz routes." The assertion is about what HTML *references*, not what
-# files *exist* in dist/. The @astrojs/svelte integration (locked in Phase 1
-# for Phase 4's QuizRunner) emits a 24KB Svelte runtime to dist/_astro/ even
-# when no Phase 3 page uses `client:*` — but if no HTML <script src> or
-# <link rel> points at it, the runtime is dead bundle weight, not loaded JS.
-# Phase 3 form: zero `.js`/`.mjs` references in any emitted HTML.
-# Phase 4+ form: same, with quiz routes allow-listed once QuizRunner ships.
+# PAGE-05's original "network panel shows no JS bundles loaded for non-quiz
+# routes" no longer holds in Phase 4: <ProgressBadge client:idle /> is mounted
+# in BaseLayout (used by every page), so JS ships site-wide.
+#
+# G6 retains ONE assertion: every required route is emitted to dist/. The
+# route-enumeration loop below is the binding contract for PAGE-04 + PAGE-05's
+# completeness criterion (no per-chapter dropouts). The "no HTML loads JS"
+# assertion is intentionally removed (see Phase 4 PATTERNS.md G5/G6 section).
 #
 # Route enumeration is driven by `dist/<base>/chapters/` directory listing —
 # we discover every chXX subdirectory Astro actually emitted, then assert that:
@@ -197,16 +186,14 @@ fi
 #
 # Requires `pnpm build` to have run first; SKIPS quietly if dist/ does not exist
 # (so `pnpm gates` (pre-build) and `pnpm gates:dist` (post-build) share gates.sh).
-echo "  [G6] no HTML loads JS + Phase 3 route enumeration (PAGE-05, PAGE-04)"
+echo "  [G6] route enumeration (PAGE-04, PAGE-05 — Phase 4 narrowed)"
 if [ -d "dist" ]; then
-  G6_JS_REFS=$(grep -rEln '<script[^>]+src=|<link[^>]+rel="modulepreload"|\.m?js"' dist --include='*.html' 2>/dev/null || true)
+  # Phase 4: G6's "no HTML loads JS" assertion is REMOVED. With <ProgressBadge
+  # client:idle /> mounted in BaseLayout (Wave 4), every page that uses the
+  # layout now references the Svelte runtime in its emitted HTML. The honest
+  # narrowing is: drop the assertion. The route-enumeration loop below is
+  # preserved as the catch for per-chapter dropouts.
   G6_FAIL=0
-  if [ -n "$G6_JS_REFS" ]; then
-    echo "    FAIL: HTML pages load JS bundles — PAGE-05 / D-61 violated:"
-    echo "$G6_JS_REFS" | sed 's/^/      /'
-    G6_FAIL=1
-    FAIL=1
-  fi
   # Resolve dist/ to whichever subdir Astro emits ('' or 'real-world-cryptography'
   # depending on base config). Astro 6 with base: '/real-world-cryptography' emits
   # dist/<base>/index.html.
@@ -275,7 +262,7 @@ if [ -d "dist" ]; then
     FAIL=1
   fi
   if [ "$G6_FAIL" -eq 0 ]; then
-    echo "    OK ($ROUTE_COUNT routes verified, no HTML loads JS)"
+    echo "    OK ($ROUTE_COUNT routes verified)"
   fi
 else
   echo "    SKIP (dist/ not built — run 'pnpm gates:dist' to build first)"
