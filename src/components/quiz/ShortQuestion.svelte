@@ -10,6 +10,25 @@
   } = $props();
 
   let text = $state('');
+  // The reveal of the model answer + rubric + SelfGradeWidget is gated on
+  // "user has clicked Check", not on `result !== null`. `result` only becomes
+  // non-null after the SelfGradeWidget locks a verdict, which itself requires
+  // the widget to be visible — gating on result alone is a deadlock.
+  let submitted = $state(false);
+
+  // Reset local state when the parent advances to a new short question
+  // (cursor++ in QuizRunner reuses this component instance for the next
+  // question of the same kind).
+  $effect(() => {
+    question.id;
+    submitted = false;
+    text = '';
+  });
+
+  function handleCheck(): void {
+    submitted = true;
+    onSubmitText(text);
+  }
 </script>
 
 <fieldset class="bg-[var(--color-surface)] p-6 -mx-6 sm:mx-0">
@@ -20,11 +39,11 @@
     placeholder="Type your answer"
     class="block w-full mt-4 p-2 bg-[var(--color-bg)] text-[var(--color-fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
   />
-  {#if result === null}
+  {#if !submitted}
     <button
       type="button"
       disabled={text.trim() === ''}
-      onclick={() => onSubmitText(text)}
+      onclick={handleCheck}
       class="mt-4 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-bg)] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
     >
       Check answer
