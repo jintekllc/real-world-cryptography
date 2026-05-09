@@ -1,0 +1,79 @@
+{
+  "chapterId": "ch07",
+  "questions": [
+    {
+      "id": "ch07-q01",
+      "chapterId": "ch07",
+      "kind": "mc",
+      "prompt": "Of the four signature standards chapter 7 surveys, which one does the chapter single out as its top recommendation when you have a free choice of algorithm for new applications?",
+      "choices": [
+        "RSA PKCS#1 v1.5 — the original RSA signature standard",
+        "RSA-PSS — the RSA standard with a security proof",
+        "ECDSA over NIST curve P-256",
+        "Ed25519 (EdDSA over the Edwards25519 curve)"
+      ],
+      "answerIndex": 3,
+      "explanation": "Chapter 7 closes its standards tour by recommending Ed25519 when you can pick freely: it is based on Schnorr (with a clean proof), generates per-signature nonces deterministically (so you can't shoot yourself in the foot the way ECDSA's Playstation 3 implementation did), has small keys, and is widely supported in modern libraries.",
+      "tags": ["signatures", "ed25519", "standards"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch07-q02",
+      "chapterId": "ch07",
+      "kind": "tf",
+      "prompt": "ECDSA tolerates a careless implementation that reuses the same per-signature random value k across two different messages signed under the same private key — at worst the two signatures will look similar, but the private key stays safe.",
+      "answer": false,
+      "explanation": "If two ECDSA signatures over different messages share the same nonce k under the same private key, simple algebra on the (r, s) values recovers k and then recovers the long-term private key outright. This is exactly the Sony PlayStation 3 bug that leaked Sony's signing key. Chapter 7 highlights this as a major reason EdDSA — which derives k deterministically from the message and a secret nonce key — is preferred.",
+      "tags": ["ecdsa", "nonce-reuse", "pitfalls"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch07-q03",
+      "chapterId": "ch07",
+      "kind": "short",
+      "prompt": "Chapter 7 frames a Schnorr signature as a Schnorr identification protocol that has been transformed by the Fiat-Shamir trick. Briefly: what does the Fiat-Shamir transform do, and what is the practical benefit for a signature scheme?",
+      "modelAnswer": "Fiat-Shamir replaces the verifier's interactive random challenge in a Sigma-protocol ZKP with a hash of the prover's commitment (and any context such as the message), so the prover can compute the challenge themselves and produce a single self-contained proof. Practically, this turns the 3-message interactive ZKP into a non-interactive proof — exactly what a digital signature needs, since the verifier may be offline or may verify the signature long after it was produced.",
+      "rubric": [
+        "Describes Fiat-Shamir as replacing the verifier's challenge with a hash of the transcript / commitment (and message)",
+        "Names the result as a non-interactive proof (signature)",
+        "Notes that this removes the need for the verifier to be online during signing",
+        "May note that including the message in the hash binds the signature to that message"
+      ],
+      "explanation": "The transform is what makes Schnorr usable as a signature scheme — and is also why ECDSA, EdDSA, and the whole Schnorr-derived family share the same `commitment / hash-as-challenge / response` shape. Including the message in the hash is what binds a particular signature to a particular message.",
+      "tags": ["zkp", "fiat-shamir", "schnorr", "signatures"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch07-q04",
+      "chapterId": "ch07",
+      "kind": "short",
+      "prompt": "Chapter 7 emphasizes that EdDSA derives the per-signature nonce deterministically from the message and a secret nonce key, rather than sampling fresh randomness for every signature. Briefly: which class of failure does that design choice prevent, and why is the deterministic approach safe?",
+      "modelAnswer": "It prevents nonce-reuse and biased-nonce failures, which are catastrophic in Schnorr-style signatures (ECDSA included): two signatures that share a per-signature nonce under the same key let an attacker recover the private key with simple algebra, and even slightly biased nonces enable lattice attacks that recover the key. EdDSA computes the nonce as a hash of (secret nonce key || message), so two different messages always lead to two different nonces, and a bad RNG can never cause a repeated or biased k — re-signing an identical message simply yields the same signature again, which is harmless.",
+      "rubric": [
+        "Names nonce reuse (or repeated k) as the failure prevented; bonus for also naming nonce bias / lattice attacks",
+        "Explains the consequence of nonce reuse in ECDSA: private-key recovery from two signatures sharing k",
+        "Describes the EdDSA construction: derive k deterministically by hashing the message together with a secret seed / nonce key",
+        "Notes that re-signing an identical message simply reproduces the same signature, which is not a problem"
+      ],
+      "explanation": "Deterministic nonces remove the largest practical implementation hazard for Schnorr-style signatures. RFC 6979 retrofits the same idea onto ECDSA; EdDSA bakes it into the standard. Chapter 7 calls this out as one of the main reasons to prefer EdDSA over ECDSA when you have a free choice.",
+      "tags": ["eddsa", "nonce", "determinism", "pitfalls"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch07-q05",
+      "chapterId": "ch07",
+      "kind": "code",
+      "prompt": "According to chapter 7, what is the size in BYTES of an Ed25519 signature (R, S) — the value the chapter's signing algorithm produces and the verifying algorithm consumes? Answer with the integer.",
+      "referenceAnswer": "64",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "An Ed25519 signature is the pair (R, S) where each component is 32 bytes (R is an Edwards25519 point in compressed form; S is a scalar modulo the group order, encoded as 32 bytes). Together that is 64 bytes — much smaller than a 256-byte (2048-bit) RSA signature.",
+      "tags": ["ed25519", "signature-size", "parameters"],
+      "difficulty": "hard"
+    }
+  ]
+}
