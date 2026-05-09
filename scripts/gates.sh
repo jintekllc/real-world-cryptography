@@ -93,10 +93,10 @@ fi
 # 'questions' / 'assessments' reads remain the chokepoint domain of
 # src/lib/questionSource.ts. Phase 4+ adds new pages (quiz routes); this
 # gate keeps them from drifting into direct collection reads.
-echo "  [G2b] pages may not read questions/assessments collections (D-29, D-60)"
-G2b_OUT=$(grep -rEn "getCollection\(['\"](questions|assessments)" src/pages/ 2>/dev/null || true)
+echo "  [G2b] pages may not read questions/assessments/codingProjects collections (D-29, D-60, D-99.1)"
+G2b_OUT=$(grep -rEn "getCollection\(['\"](questions|assessments|codingProjects)" src/pages/ 2>/dev/null || true)
 if [ -n "$G2b_OUT" ]; then
-  echo "    FAIL: pages directly reading questions/assessments — go through QuestionSource:"
+  echo "    FAIL: pages directly reading questions/assessments/codingProjects — go through the appropriate chokepoint:"
   echo "$G2b_OUT" | sed 's/^/      /'
   FAIL=1
 else
@@ -205,16 +205,20 @@ if [ -d "dist" ]; then
     DIST_ROOT="dist/real-world-cryptography"
   fi
   # Cross-cutting (non-per-chapter) routes — hand-listed because they don't
-  # vary per chapter. 1 homepage + 1 chapter index + 5 assessments + 1 fixture
-  # + 1 coding-project + 1 reset = 10 paths.
+  # vary per chapter. 1 homepage + 1 chapter index + 1 assessments index +
+  # 4 cross-cutting assessments + 1 final-exam interstitial + 1 final-exam
+  # runner + 1 fixture + 1 coding-project + 1 reset = 12 paths (Phase 5 D-96.2 +
+  # D-97.5 + D-101 added 2 vs Phase 4's 10).
   REQUIRED_FIXED_ROUTES=(
     "index.html"
     "chapters/index.html"
-    "assessments/part-1-test/index.html"
+    "assessments/index.html"                              # Phase 5 D-96.2 — assessments listing
+    "assessments/part-1-required/index.html"              # Phase 5 D-101 — renamed from part-1-test
     "assessments/part-1-challenge/index.html"
-    "assessments/part-2-test/index.html"
+    "assessments/part-2-required/index.html"              # Phase 5 D-101 — renamed from part-2-test
     "assessments/part-2-challenge/index.html"
-    "assessments/final-exam/index.html"
+    "assessments/final-exam/index.html"                   # Phase 5 D-97.5 — server-only interstitial
+    "assessments/final-exam/start/index.html"             # Phase 5 D-97.5 — runner route (RESEARCH Pattern 1)
     "assessments/hello-crypto-quiz/index.html"
     "coding-project/index.html"
     "reset/index.html"
