@@ -276,11 +276,57 @@ else
 fi
 
 # -----------------------------------------------------------------------------
+# Gate G7 (Phase 6 — GEN-02): paraphrase guard
+# -----------------------------------------------------------------------------
+# Rationale: D-104 — no committed question may contain an 8+ word verbatim
+# sequence (case + whitespace + punctuation normalized) from the book PDF.
+# The check runs `node scripts/n-gram-guard.mjs`, which extracts the book
+# text via the `pdftotext` system binary (poppler-utils) and slides an
+# 8-gram window across every question's text fields (prompt, mc choices,
+# short modelAnswer + rubric, optional explanation).
+#
+# SKIP behavior: if the book PDF is not present at $RWC_BOOK_PDF (default
+# ./Real-World-Cryptography.pdf), G7 emits a SKIP line instead of failing.
+# This keeps `pnpm gates` green for cohort developers who clone the repo
+# without the gitignored PDF; CI / generation runs in a controlled
+# environment with the PDF present and SHOULD fail-fast in that mode (set
+# RWC_GATES_REQUIRE_PDF=1 to convert the SKIP into a hard failure).
+#
+# SEED TEST (cohort-review-reproducible): to verify the guard catches a
+# planted verbatim 8-gram, drop a temporary bank into src/content/questions/
+# whose modelAnswer (or any scanned field) contains 8+ consecutive words
+# copied verbatim from a known book page, then run `pnpm gates` — expect
+# exit 1 with a `[G7] FAIL` line citing the seed file + page number. Delete
+# the seed file and re-run — expect exit 0 again. (This procedure was
+# executed once during Plan 06-01 Task 2; the seed file is NOT committed.)
+echo "  [G7] paraphrase guard (no 8+ word verbatim from book; D-104, GEN-02)"
+BOOK_PDF_PATH="${RWC_BOOK_PDF:-./Real-World-Cryptography.pdf}"
+if [ ! -f "$BOOK_PDF_PATH" ]; then
+  if [ "${RWC_GATES_REQUIRE_PDF:-0}" = "1" ]; then
+    echo "    FAIL: book PDF not found at $BOOK_PDF_PATH (RWC_GATES_REQUIRE_PDF=1)"
+    FAIL=1
+  else
+    echo "    SKIP (book PDF not found at $BOOK_PDF_PATH; gitignored — set RWC_GATES_REQUIRE_PDF=1 to fail)"
+  fi
+else
+  G7_OUT=$(node scripts/n-gram-guard.mjs 2>&1)
+  G7_RC=$?
+  if [ "$G7_RC" -ne 0 ]; then
+    echo "$G7_OUT" | sed 's/^/    /'
+    FAIL=1
+  else
+    # Echo the guard's OK summary line (the script already prints a useful
+    # "[G7] paraphrase guard: OK (N questions across M banks ...)" line).
+    echo "$G7_OUT" | sed 's/^/    /'
+  fi
+fi
+
+# -----------------------------------------------------------------------------
 # Final report
 # -----------------------------------------------------------------------------
 echo ""
 if [ "$FAIL" -eq 0 ]; then
-  echo "==> All chokepoint gates passed (G1, G2, G2b, G3, G4, G5, G6)"
+  echo "==> All chokepoint gates passed (G1, G2, G2b, G3, G4, G5, G6, G7)"
   exit 0
 else
   echo "==> CHOKEPOINT GATE FAILURE — see violations above" >&2
