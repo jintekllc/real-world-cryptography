@@ -1,0 +1,78 @@
+{
+  "chapterId": "ch04",
+  "questions": [
+    {
+      "id": "ch04-q01",
+      "chapterId": "ch04",
+      "kind": "mc",
+      "prompt": "Chapter 4 uses the famous `ECB penguin` image to illustrate the central weakness of the ECB mode of operation. What is that weakness?",
+      "choices": [
+        "ECB encryption is too slow to be practical on modern hardware.",
+        "ECB requires a 256-bit key, which most applications cannot provision.",
+        "Identical plaintext blocks under the same key map to identical ciphertext blocks, so structure in the plaintext is visible in the ciphertext.",
+        "ECB requires a fresh random IV per block, and most libraries fail to supply one."
+      ],
+      "answerIndex": 2,
+      "explanation": "ECB encrypts each block independently and deterministically, so any repeating pattern in the plaintext (the outline of a penguin, a header, a fixed prefix) shows through into the ciphertext. The chapter recommends modes that randomize each block (such as CBC with a random IV, or an AEAD).",
+      "tags": ["aes", "ecb", "modes", "pitfalls"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch04-q02",
+      "chapterId": "ch04",
+      "kind": "tf",
+      "prompt": "AES-GCM stays secure even if you accidentally encrypt two different plaintexts using the same key and the same 96-bit nonce.",
+      "answer": false,
+      "explanation": "Repeating the (key, nonce) pair in AES-GCM is catastrophic. The chapter notes that an attacker can XOR the two ciphertexts to recover the XOR of the two plaintexts and can also recover the GHASH authentication key, which then enables forging valid tags on chosen messages. AES-GCM-SIV is the misuse-resistant alternative when nonce repetition is a real worry.",
+      "tags": ["aead", "aes-gcm", "nonce", "pitfalls"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch04-q03",
+      "chapterId": "ch04",
+      "kind": "short",
+      "prompt": "Chapter 4 argues that confidentiality alone is not enough — symmetric encryption must also be authenticated. In one or two sentences, explain why an attacker who can only modify ciphertext (not learn plaintext) is still dangerous when no integrity check is in place.",
+      "modelAnswer": "Modes like CBC and CTR are malleable: predictable changes to ciphertext bits produce predictable changes to plaintext bits after decryption, so an attacker can flip targeted plaintext bits (or, in CBC, scramble a block) without ever decrypting the message. Without an integrity check the receiver has no way to detect the tampering, so authenticity must be added on top — either via Encrypt-then-MAC or, preferably, via an AEAD.",
+      "rubric": [
+        "Names malleability (or describes the ability to predictably modify plaintext bits via ciphertext bit-flips, e.g. CTR mode keystream XOR or CBC IV-flip on the first block)",
+        "Notes that the receiver has no way to detect tampering without an integrity tag",
+        "Mentions the fix: a MAC (Encrypt-then-MAC) or, preferably, an AEAD construction"
+      ],
+      "explanation": "The reason chapter 4 spends so much time on AES-CBC-HMAC and AEAD is that unauthenticated encryption is exploitable in deployed protocols (the BEAST and padding-oracle families both turn malleability into key-recovery). Authentication is part of the encryption contract, not an optional extra.",
+      "tags": ["malleability", "integrity", "aead"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch04-q04",
+      "chapterId": "ch04",
+      "kind": "short",
+      "prompt": "Chapter 4 introduces AEAD (authenticated encryption with associated data) and singles it out as the modern best practice. Briefly: what are the two security guarantees an AEAD provides, and what is the role of the optional `associated data` argument?",
+      "modelAnswer": "An AEAD provides confidentiality of the plaintext (it is encrypted, just like in any symmetric cipher) AND integrity/authenticity of both the ciphertext and any associated data (the receiver can detect any modification to either field). The associated data is plaintext metadata that is bound to the ciphertext by the authentication tag — typical examples are headers, sender identity, or version numbers — so it travels in the clear but cannot be swapped or tampered with without the AEAD's decrypt step rejecting the message.",
+      "rubric": [
+        "Names confidentiality (of the plaintext) as one guarantee",
+        "Names integrity / authenticity (of the ciphertext, and also of the associated data) as the second guarantee",
+        "Identifies associated data as plaintext metadata that is authenticated but not encrypted",
+        "Implies that decryption fails if either ciphertext or associated data is modified after encryption"
+      ],
+      "explanation": "AEAD is the all-in-one shape: encrypt + authenticate + bind context-metadata, in a single primitive. AES-GCM and ChaCha20-Poly1305 are the chapter's two canonical AEADs.",
+      "tags": ["aead", "associated-data", "integrity"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch04-q05",
+      "chapterId": "ch04",
+      "kind": "code",
+      "prompt": "What is the standard nonce size, in BITS, for AES-GCM as described in chapter 4 (i.e., the size of the nonce that is concatenated with a 32-bit counter to produce the 128-bit AES input block)? Answer with the integer.",
+      "referenceAnswer": "96",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "Chapter 4 spells this out: the AES-GCM nonce occupies 12 of the 16 bytes (96 bits) of the AES input block, leaving 32 bits for the counter starting at 1. The same 96-bit nonce size is also used by ChaCha20-Poly1305 for compatibility.",
+      "tags": ["aes-gcm", "nonce", "parameters"],
+      "difficulty": "hard"
+    }
+  ]
+}
