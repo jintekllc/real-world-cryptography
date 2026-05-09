@@ -1,0 +1,79 @@
+{
+  "chapterId": "ch06",
+  "questions": [
+    {
+      "id": "ch06-q01",
+      "chapterId": "ch06",
+      "kind": "mc",
+      "prompt": "Chapter 6 contrasts RSA's hardness assumption with the one underlying Diffie-Hellman. Which problem is RSA's security based on?",
+      "choices": [
+        "The discrete logarithm problem in a multiplicative group modulo a prime",
+        "The elliptic curve discrete logarithm problem",
+        "The hardness of factoring a large composite number N = p × q into its two prime factors",
+        "Finding hash collisions in SHA-256"
+      ],
+      "answerIndex": 2,
+      "explanation": "RSA's modulus N is chosen as the product of two large primes p and q. The order of the multiplicative group modulo N depends on p and q, and computing the private exponent requires that order — so an attacker who can factor N breaks RSA. DH and ECDH, by contrast, rest on different (discrete-log-flavored) hard problems.",
+      "tags": ["rsa", "asymmetric", "hard-problems"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch06-q02",
+      "chapterId": "ch06",
+      "kind": "tf",
+      "prompt": "Textbook RSA (raw m^e mod N, with no padding) is safe to use directly when the messages are short, because RSA's hard-problem foundation already protects each ciphertext.",
+      "answer": false,
+      "explanation": "Textbook RSA is deterministic and malleable: an attacker can encrypt every short candidate and look for a match (because identical plaintexts give identical ciphertexts), and can multiply a ciphertext by r^e to obtain a ciphertext for r·m. Real-world deployments must use a padded standard such as RSA-OAEP (and never PKCS#1 v1.5, which is broken).",
+      "tags": ["rsa", "textbook-rsa", "pitfalls", "padding"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch06-q03",
+      "chapterId": "ch06",
+      "kind": "short",
+      "prompt": "Chapter 6 explains why almost no real protocol encrypts a long message directly with asymmetric encryption. Briefly: what is the limitation, and how does hybrid encryption work around it?",
+      "modelAnswer": "Asymmetric primitives like RSA can only encrypt messages up to roughly the size of the modulus (about 500 ASCII characters at a 4096-bit RSA modulus, less once padding overhead is subtracted), and they are also slow. Hybrid encryption gets around this by generating a fresh symmetric key per message: that small symmetric key is asymmetrically encrypted (the KEM half) and the actual message is encrypted under it with a fast authenticated encryption algorithm (the DEM half), so arbitrarily long messages can be sent with public-key semantics.",
+      "rubric": [
+        "Identifies the size limit of asymmetric encryption (RSA modulus bounds the plaintext, ~500 chars at 4096-bit)",
+        "Notes that asymmetric primitives are also slow compared to symmetric encryption",
+        "Describes the hybrid pattern: generate a per-message symmetric key, asymmetrically encrypt that key, symmetrically (AEAD) encrypt the message",
+        "May name the two halves as KEM (key encapsulation mechanism) and DEM (data encapsulation mechanism)"
+      ],
+      "explanation": "Hybrid encryption is the universal solution because it combines the public-key shape of asymmetric encryption (anyone with the public key can encrypt to you) with the throughput of symmetric AEAD. Real protocols name and use this pattern under labels like KEM/DEM or, in the elliptic-curve world, ECIES.",
+      "tags": ["hybrid", "kem-dem", "rsa", "performance"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch06-q04",
+      "chapterId": "ch06",
+      "kind": "short",
+      "prompt": "Chapter 6 warns that the original RSA encryption padding standard, PKCS#1 v1.5, must not be used. Briefly: what kind of attack breaks PKCS#1 v1.5 RSA encryption, and which standard does the chapter recommend instead?",
+      "modelAnswer": "PKCS#1 v1.5 is vulnerable to Bleichenbacher's million-message attack, an adaptive chosen-ciphertext attack: an attacker sends modified ciphertexts to a decrypting oracle and observes whether the padding was accepted, gradually narrowing the plaintext range until the original message is recovered. The chapter recommends RSA-OAEP (defined in PKCS#1 v2.x), whose plaintext-awareness property defeats this style of attack — or, increasingly, moving to ECDH-based hybrid schemes such as ECIES instead of RSA encryption.",
+      "rubric": [
+        "Names Bleichenbacher's attack (the `million-message` attack) OR describes it as an adaptive chosen-ciphertext / padding-oracle attack",
+        "Explains the mechanism: attacker submits modified ciphertexts and learns from whether padding was accepted, recovering the plaintext incrementally",
+        "Recommends RSA-OAEP as the replacement",
+        "Bonus: notes that modern protocols often skip RSA entirely in favor of ECDH-based hybrid encryption (ECIES)"
+      ],
+      "explanation": "The structural issue is that PKCS#1 v1.5 leaks information about the plaintext through the validity of its padding format. OAEP closes the leak via its mask-generation construction so that even partial decryption reveals nothing useful, which is why it is the secure RSA encryption standard.",
+      "tags": ["rsa", "pkcs1", "oaep", "bleichenbacher", "padding-oracle"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch06-q05",
+      "chapterId": "ch06",
+      "kind": "code",
+      "prompt": "Chapter 6 notes that essentially every modern RSA implementation has settled on the same fixed prime number for the public exponent e. What is that integer value? Answer with the integer.",
+      "referenceAnswer": "65537",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "The chapter calls out 65537 (which is 2^16 + 1, the fourth Fermat prime) as the standard RSA public exponent. It is small enough to make encryption fast — the binary expansion is 10000000000000001, so square-and-multiply finishes quickly — yet large enough to avoid the small-exponent attacks that plague e=3.",
+      "tags": ["rsa", "public-exponent", "parameters"],
+      "difficulty": "hard"
+    }
+  ]
+}
