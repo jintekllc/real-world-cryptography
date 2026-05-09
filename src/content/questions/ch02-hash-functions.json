@@ -1,0 +1,78 @@
+{
+  "chapterId": "ch02",
+  "questions": [
+    {
+      "id": "ch02-q01",
+      "chapterId": "ch02",
+      "kind": "mc",
+      "prompt": "Chapter 2 lists the three classic security properties a cryptographic hash function is expected to provide. Which of the options below is NOT one of those three properties?",
+      "choices": [
+        "Pre-image resistance",
+        "Forward secrecy",
+        "Second pre-image resistance",
+        "Collision resistance"
+      ],
+      "answerIndex": 1,
+      "explanation": "A hash function is expected to provide pre-image resistance, second pre-image resistance, and collision resistance. Forward secrecy is a property of certain key-exchange protocols and has nothing to do with the hash itself.",
+      "tags": ["hash", "security-properties", "terminology"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch02-q02",
+      "chapterId": "ch02",
+      "kind": "tf",
+      "prompt": "SHA-2 can be used to hash secret values directly with no extra precaution, because it offers the same security properties as SHA-3.",
+      "answer": false,
+      "explanation": "SHA-2 is a Merkle-Damgard construction and is vulnerable to length-extension attacks when applied to a secret. The chapter recommends SHA-3 (or a MAC such as HMAC, covered in chapter 3) when a secret is being hashed.",
+      "tags": ["hash", "sha-2", "length-extension"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch02-q03",
+      "chapterId": "ch02",
+      "kind": "short",
+      "prompt": "In one or two sentences, explain why chapter 2 sets 256 bits as the minimum recommended digest size for a cryptographic hash function.",
+      "modelAnswer": "The chapter aims for 128 bits of security against collisions, and the birthday bound says that collisions in an N-bit digest can be found after roughly 2^(N/2) hash evaluations. To leave 128 bits of effective collision resistance, the digest must be at least 256 bits.",
+      "rubric": [
+        "Mentions the birthday bound (or birthday paradox / 2^(N/2) collisions in an N-bit space)",
+        "Identifies the security target as roughly 128 bits of collision resistance",
+        "Concludes that the digest size must be at least 256 bits to provide that target"
+      ],
+      "explanation": "Halving the bit length is a property of the birthday attack on collision resistance. 256-bit output is the smallest size that still leaves a comfortable 128-bit margin for symmetric-strength security.",
+      "tags": ["hash", "birthday-bound", "digest-size"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch02-q04",
+      "chapterId": "ch02",
+      "kind": "short",
+      "prompt": "Chapter 2 introduces SHA-2 and SHA-3 as the two recommended hash function families. Briefly contrast the underlying constructions of SHA-2 and SHA-3, and name one practical consequence of that difference that the chapter calls out.",
+      "modelAnswer": "SHA-2 is built on the Merkle-Damgard construction (iterating a compression function over padded input blocks), while SHA-3 is built on a sponge construction (absorbing input by XOR-ing it into a permutation state and then squeezing out a digest). A practical consequence: a length-extension attack works against SHA-2 when it is applied to a secret, but the sponge construction immunizes SHA-3 against that attack, so SHA-3 is the right pick when a secret is being hashed directly.",
+      "rubric": [
+        "Identifies SHA-2 as a Merkle-Damgard construction (or describes iterating a compression function over message blocks)",
+        "Identifies SHA-3 as a sponge construction (or describes absorb/squeeze with a permutation)",
+        "Names length-extension as the difference, OR notes that SHA-3 is safe to hash secrets while SHA-2 is not",
+        "Conclusion is correct: SHA-3 (not SHA-2) is preferred when hashing secrets"
+      ],
+      "explanation": "The two designs are structurally different. The chapter highlights that the sponge construction sidesteps the length-extension weakness inherent in iterated Merkle-Damgard, which is why SHA-3 was preferred for the standard refresh and is fine to apply to secret inputs.",
+      "tags": ["hash", "sha-2", "sha-3", "length-extension"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch02-q05",
+      "chapterId": "ch02",
+      "kind": "code",
+      "prompt": "What is the SHA-256 digest of the three-character ASCII string `abc` (no trailing newline), expressed in lowercase hex? This is the canonical SHA-256 example used in NIST FIPS 180-4 Appendix B and is recomputable with any standard SHA-256 implementation, e.g. `printf 'abc' | openssl dgst -sha256`.",
+      "referenceAnswer": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "SHA-256 of `abc` is the most widely cited test vector for the algorithm and is fixed by the standard. Computing it with the openssl CLI shown in the chapter (or any other SHA-256 implementation) reproduces this exact 64-character hex digest.",
+      "tags": ["hash", "sha-256", "test-vector"],
+      "difficulty": "hard"
+    }
+  ]
+}
