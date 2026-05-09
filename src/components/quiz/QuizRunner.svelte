@@ -15,10 +15,12 @@
   import FeedbackPanel from './FeedbackPanel.svelte';
   import ReviewScreen from './ReviewScreen.svelte';
 
-  let { questions, assessment, codeBlockHtmlByQid = {} }: {
+  let { questions, assessment, codeBlockHtmlByQid = {}, chapterToPart = {}, chapterTitles = {} }: {
     questions: Question[];                            // server-fetched in page frontmatter
     assessment: Assessment;                           // server-fetched; non-nullable (page falls back to ComingInPhase when null)
     codeBlockHtmlByQid?: Record<string, string>;      // D-94 — page shells supply this
+    chapterToPart?: Record<string, 1 | 2>;            // Plan 05-04 — final-exam ReviewScreen subtotals
+    chapterTitles?: Record<string, string>;           // Plan 05-04 — final-exam ReviewScreen accordion
   } = $props();
 
   // ===========================================================================
@@ -249,6 +251,9 @@
       assessment={assessment}
       score={reviewScore}
       onRetake={retake}
+      mode={assessment.kind === 'final-exam' ? 'final-exam' : 'standard'}
+      chapterToPart={chapterToPart}
+      chapterTitles={chapterTitles}
     />
   {:else if current !== undefined}
     <p class="text-sm text-[var(--color-muted)]">Question {cursor + 1} of {total}</p>

@@ -1,11 +1,39 @@
 ---
+// src/pages/coding-project/index.astro
+//
+// /coding-project/ — replaces the Phase 3 stub with the real 5-card page
+// (D-98). Mounts the toggle island ONCE at the bottom; the island scans
+// every [data-rwc-project-toggle] slot inside the <CodingProjectCard>
+// instances and hydrates them with two checkboxes each.
+//
+// G2b: this page MUST go through ~/lib/codingProjectSource.ts (Plan 05-05
+// widens G2b to enforce this) — never read the codingProjects collection
+// directly.
+
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import ComingInPhase from '~/components/ComingInPhase.astro';
+import CodingProjectCard from '~/components/CodingProjectCard.astro';
+import CodingProjectToggles from '~/components/CodingProjectToggles.svelte';
+import { getAllCodingProjects } from '~/lib/codingProjectSource';
+
+const projects = await getAllCodingProjects();
+// Sort by difficulty (UI-SPEC focal-point convention: easy first as the brightest
+// pixel/scannable starting point) — easy < normal < hard < stretch.
+const RANK: Record<string, number> = { easy: 1, normal: 2, hard: 3, stretch: 4 };
+const sorted = projects.slice().sort((a, b) => (RANK[a.difficulty] ?? 99) - (RANK[b.difficulty] ?? 99));
 ---
-<BaseLayout title="Coding Project — Real-World Cryptography Course">
-  <ComingInPhase
-    routeName="Coding Project"
-    phase={5}
-    description="Five self-directed project ideas tied to book content."
-  />
+<BaseLayout title="Coding project — Real-World Cryptography Course">
+  <h1 class="text-3xl font-semibold">Coding project</h1>
+  <p class="mt-2 text-sm text-[var(--color-muted)]">Pick one — build something real that uses the book's primitives.</p>
+
+  {sorted.length === 0 ? (
+    <section class="mt-12 bg-[var(--color-surface)] p-6 -mx-6 sm:mx-0">
+      <h2 class="text-xl font-semibold">Coding project ideas are still in proposal — check back after Phase 5 completes.</h2>
+    </section>
+  ) : (
+    <ul class="mt-12 space-y-4">
+      {sorted.map((p) => <li><CodingProjectCard project={p} /></li>)}
+    </ul>
+  )}
+
+  <CodingProjectToggles client:idle />
 </BaseLayout>
