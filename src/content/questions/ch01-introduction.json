@@ -1,0 +1,78 @@
+{
+  "chapterId": "ch01",
+  "questions": [
+    {
+      "id": "ch01-q01",
+      "chapterId": "ch01",
+      "kind": "mc",
+      "prompt": "According to Kerckhoff's principle, which part of a cryptosystem is the only thing that must remain secret?",
+      "choices": [
+        "The encryption algorithm itself",
+        "The exact source code of the implementation",
+        "The secret key",
+        "The list of cryptographic primitives in use"
+      ],
+      "answerIndex": 2,
+      "explanation": "Kerckhoff's principle assumes that an adversary will eventually learn the algorithm, so security must rest entirely on keeping the key hidden. Publishing the algorithm lets independent experts review it, while the key alone preserves confidentiality.",
+      "tags": ["intro", "kerckhoff", "symmetric"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch01-q02",
+      "chapterId": "ch01",
+      "kind": "tf",
+      "prompt": "AES became a standard through a closed selection process inside NIST, with no input from outside cryptanalysts.",
+      "answer": false,
+      "explanation": "AES was chosen through an open international competition in which volunteer cryptanalysts publicly attacked the candidate algorithms over several years. Public scrutiny was the entire point of the process and is what built confidence in the winning design.",
+      "tags": ["intro", "aes", "kerckhoff"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch01-q03",
+      "chapterId": "ch01",
+      "kind": "short",
+      "prompt": "In one sentence, explain why an unauthenticated Diffie-Hellman key exchange between two strangers is insecure in practice.",
+      "modelAnswer": "Without some way to verify whose public key you actually received, a man-in-the-middle attacker can substitute their own public key for each party and end up sharing a separate secret with both, transparently relaying messages.",
+      "rubric": [
+        "Names the man-in-the-middle (MITM) attack or describes an active attacker substituting public keys",
+        "Identifies the missing property as authentication of the public keys (no way to confirm whose key it really is)",
+        "Implies that confidentiality alone is not enough — both parties end up encrypting to the attacker"
+      ],
+      "explanation": "DH alone gives a shared secret between whoever exchanges the keys, but it does not bind a key to a specific identity. Some out-of-band trust (a certificate, a pre-shared key, or a signature) is needed to defeat the MITM.",
+      "tags": ["intro", "asymmetric", "key-exchange", "mitm"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch01-q04",
+      "chapterId": "ch01",
+      "kind": "short",
+      "prompt": "Chapter 1 distinguishes confidentiality from authentication as two separate goals a cryptographic primitive may provide. Briefly explain each goal and give one example primitive from the chapter for each.",
+      "modelAnswer": "Confidentiality keeps the contents of a message hidden from unintended observers (a symmetric cipher such as AES is the example primitive used in the chapter), while authentication is about being sure who the message came from (a digital signature scheme such as RSA signatures is the example primitive used in the chapter).",
+      "rubric": [
+        "Defines confidentiality as hiding/masking message contents from unauthorized observers",
+        "Defines authentication as identifying who you are talking to or verifying message origin",
+        "Cites a symmetric cipher (e.g., AES) or symmetric encryption as a confidentiality example",
+        "Cites a digital signature (or RSA signatures) as an authentication example"
+      ],
+      "explanation": "The chapter frames most primitives as providing one or both of these properties. AES targets confidentiality by masking plaintext under a key; signatures target authentication by binding a message to the signer's private key.",
+      "tags": ["intro", "goals", "terminology", "signatures"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch01-q05",
+      "chapterId": "ch01",
+      "kind": "code",
+      "prompt": "Figure 1.15 in chapter 1 sums up the cryptographic primitives introduced so far. How many distinct primitives appear on that final map (counting symmetric encryption, key exchange, asymmetric encryption, and digital signatures as one primitive each)?",
+      "referenceAnswer": "4",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "The final summary map of chapter 1 collects exactly four primitives: symmetric encryption from the symmetric side, plus key exchanges, asymmetric encryption, and digital signatures from the asymmetric side. Counting them is a quick check that you tracked the full tour the chapter walked through.",
+      "tags": ["intro", "primitives", "summary"],
+      "difficulty": "hard"
+    }
+  ]
+}
