@@ -1,0 +1,47 @@
+---
+// src/pages/assessments/final-exam/start/index.astro
+//
+// /assessments/final-exam/start/ — final-exam runner (D-97.5 + RESEARCH Pattern 1).
+// Mounts <QuizRunner client:visible> with the four runtime props PLUS the two
+// final-exam-specific maps (chapterToPart, chapterTitles) computed at build
+// time from the chapters collection (G2b allowance — D-60).
+//
+// QuizRunner's `feedbackMode: 'end-only'` branch (D-100 fix from Plan 05-02)
+// is what makes this route reach the ReviewScreen at all.
+
+import { getCollection } from 'astro:content';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import ComingInPhase from '~/components/ComingInPhase.astro';
+import QuizRunner from '~/components/quiz/QuizRunner.svelte';
+import { questionSource } from '~/lib/questionSource';
+
+const assessment = await questionSource.getAssessment('final-exam');
+const questions = await questionSource.getByAssessment('final-exam');
+
+// G2b allowance (D-60): pages MAY read the chapters collection directly.
+// Compute the two maps the final-exam ReviewScreen needs (Plan 05-03 wired
+// the props through ReviewScreen's $derived).
+const chapters = await getCollection('chapters');
+const chapterToPart: Record<string, 1 | 2> = {};
+const chapterTitles: Record<string, string> = {};
+for (const c of chapters) {
+  chapterToPart[c.data.chapter] = c.data.part;
+  chapterTitles[c.data.chapter] = c.data.title;
+}
+---
+<BaseLayout title="Final exam — Real-World Cryptography Course">
+  {assessment !== null ? (
+    <Fragment>
+      <h1 class="text-3xl font-semibold">Final exam</h1>
+      <QuizRunner
+        client:visible
+        questions={questions}
+        assessment={assessment}
+        chapterToPart={chapterToPart}
+        chapterTitles={chapterTitles}
+      />
+    </Fragment>
+  ) : (
+    <ComingInPhase routeName="Final exam" phase={5} description="Cumulative exam covering both parts." />
+  )}
+</BaseLayout>

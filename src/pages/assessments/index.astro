@@ -1,0 +1,47 @@
+---
+// src/pages/assessments/index.astro
+//
+// /assessments/ — listing page (D-96.2). Renders one <AssessmentCard> per
+// assessment, filtered by kind !== 'quiz' && kind !== 'challenge' (chapter
+// quizzes are hidden in v1; their fixtures arrive in Phase 6).
+//
+// G2b: this page MUST go through the chokepoint method on questionSource
+// (Plan 05-02 added it) — never read the assessments collection directly.
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import AssessmentCard from '~/components/AssessmentCard.astro';
+import { questionSource } from '~/lib/questionSource';
+
+const all = await questionSource.getAllAssessments();
+// D-96.2 — hide chapter quizzes (kind 'quiz' / 'challenge') in v1.
+const visible = all.filter(
+  (a) => a.kind !== 'quiz' && a.kind !== 'challenge',
+);
+// Locked sort: part-test, part-challenge, final-exam — Part 1 before Part 2,
+// required before challenge. Implementation: sort by id which alphabetically
+// orders 'part-1-required' < 'part-1-challenge' alphabetically because
+// 'challenge' > 'required' is the opposite — so use an explicit custom order.
+const ORDER: Record<string, number> = {
+  'part-1-required':  1,
+  'part-1-challenge': 2,
+  'part-2-required':  3,
+  'part-2-challenge': 4,
+  'final-exam':       5,
+};
+const sorted = visible.slice().sort((a, b) => (ORDER[a.id] ?? 99) - (ORDER[b.id] ?? 99));
+---
+<BaseLayout title="Assessments — Real-World Cryptography Course">
+  <h1 class="text-3xl font-semibold">Assessments</h1>
+  <p class="mt-2 text-sm text-[var(--color-muted)]">Part tests, challenges, and the final exam.</p>
+
+  {sorted.length === 0 ? (
+    <section class="mt-12 bg-[var(--color-surface)] p-6 -mx-6 sm:mx-0">
+      <h2 class="text-xl font-semibold">No assessments available yet.</h2>
+      <p class="mt-4 leading-relaxed">Chapter quizzes ship in Phase 6.</p>
+    </section>
+  ) : (
+    <ul class="mt-12 space-y-4">
+      {sorted.map((a) => <li><AssessmentCard assessment={a} /></li>)}
+    </ul>
+  )}
+</BaseLayout>

@@ -1,0 +1,28 @@
+---
+// src/pages/assessments/final-exam/index.astro
+//
+// /assessments/final-exam/ — pre-exam interstitial (D-97.5, RESEARCH Pattern 1).
+// Server-rendered ONLY. Zero JS shipped on this route until the user clicks
+// `Begin exam →` and lands on /assessments/final-exam/start/ (the runner).
+// Two-route static interstitial — the binding solution to static-output
+// querystring branching.
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import FinalExamInterstitial from '~/components/FinalExamInterstitial.astro';
+import ComingInPhase from '~/components/ComingInPhase.astro';
+import { questionSource } from '~/lib/questionSource';
+
+const assessment = await questionSource.getAssessment('final-exam');
+const questions = await questionSource.getByAssessment('final-exam');
+const chapterCount = new Set(questions.map((q) => q.chapterId)).size;
+---
+<BaseLayout title="Final exam — Real-World Cryptography Course">
+  {assessment !== null ? (
+    <Fragment>
+      <h1 class="text-3xl font-semibold">Final exam</h1>
+      <FinalExamInterstitial assessment={assessment} chapterCount={chapterCount} />
+    </Fragment>
+  ) : (
+    <ComingInPhase routeName="Final exam" phase={5} description="Cumulative exam covering both parts." />
+  )}
+</BaseLayout>
