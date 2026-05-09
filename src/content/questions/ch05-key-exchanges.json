@@ -1,0 +1,78 @@
+{
+  "chapterId": "ch05",
+  "questions": [
+    {
+      "id": "ch05-q01",
+      "chapterId": "ch05",
+      "kind": "mc",
+      "prompt": "Which hard mathematical problem does chapter 5 identify as the foundation of the security of the (finite-field) Diffie-Hellman key exchange?",
+      "choices": [
+        "Integer factorization of large RSA-style composites",
+        "Finding short vectors in a high-dimensional lattice",
+        "The discrete logarithm problem in a multiplicative group modulo a large prime",
+        "Finding a hash collision in SHA-256"
+      ],
+      "answerIndex": 2,
+      "explanation": "DH operates in a multiplicative group modulo a large prime p. Knowing the public key g^x mod p does not let an observer recover the private key x; recovering x from g^x is exactly the discrete logarithm problem, which is believed to be hard for a sufficiently large prime.",
+      "tags": ["dh", "discrete-log", "asymmetric"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch05-q02",
+      "chapterId": "ch05",
+      "kind": "tf",
+      "prompt": "X25519 (ECDH over Curve25519) and standard finite-field Diffie-Hellman both require roughly 256-bit public keys to provide approximately 128 bits of security.",
+      "answer": false,
+      "explanation": "Elliptic-curve DH gets to roughly 128 bits of security with 256-bit keys, but plain finite-field DH needs about 2048-bit parameters (per the recommendations summarized in chapter 5) to reach the same security level. That key-size advantage is one of the chapter's central reasons for preferring ECDH over plain DH.",
+      "tags": ["dh", "ecdh", "key-sizes", "x25519"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch05-q03",
+      "chapterId": "ch05",
+      "kind": "short",
+      "prompt": "Chapter 5 prefers ECDH (e.g. X25519) over plain finite-field Diffie-Hellman as the default modern key exchange. Briefly: at the standard 128-bit security target, what key/parameter sizes does each scheme require, and what is the practical takeaway?",
+      "modelAnswer": "Plain DH needs a prime modulus of about 2048 bits (so private and public keys are ~2048-bit values), while ECDH on a 256-bit curve such as Curve25519 or P-256 gets the same 128 bits of security with ~256-bit keys. The practical takeaway is that ECDH ships eight-times-smaller public keys and shared secrets, runs faster on most platforms, and is the default key-exchange recommendation in the chapter.",
+      "rubric": [
+        "States DH needs ~2048-bit parameters / keys for 128-bit security",
+        "States ECDH (X25519 or P-256) reaches 128-bit security with ~256-bit keys",
+        "Names the takeaway: ECDH gives smaller keys / better performance, so prefer it as the default"
+      ],
+      "explanation": "The asymmetry in key sizes is the headline reason real-world protocols (TLS 1.3, Signal, OpenSSH) have moved to ECDH. Smaller keys mean smaller handshakes, less bandwidth, and faster scalar multiplication on constrained devices.",
+      "tags": ["dh", "ecdh", "key-sizes", "performance"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch05-q04",
+      "chapterId": "ch05",
+      "kind": "short",
+      "prompt": "Chapter 5 warns about small-subgroup attacks against Diffie-Hellman. Briefly: what does a small-subgroup attack do to leak information about a victim's private key, and what is the mitigation the chapter recommends?",
+      "modelAnswer": "An attacker sends a public key that is the generator of a small subgroup (instead of a legitimate element of the large prime-order subgroup). When the victim raises that public key to their private key, the resulting `shared secret` lands in the same small subgroup, so it can take only a few possible values — observing which one leaks bits of the private key. The chapter's mitigation is to validate every received public key (verify it lies in the correct large subgroup, or use safe-prime / RFC 7919 groups in DH and validated curves like X25519 in ECDH) and to refuse the all-zero shared secret on Curve25519.",
+      "rubric": [
+        "Describes the attacker sending a public key drawn from a small subgroup (a generator of size 2 or some other small order)",
+        "Explains that the resulting shared secret falls into a small set, leaking bits of the victim's private key",
+        "Names the mitigation: validate received public keys (check subgroup membership) OR use standardized safe groups (RFC 7919 for DH, X25519/Ristretto for ECDH)",
+        "Implies that repeating the attack with different small subgroups can recover the private key one chunk at a time"
+      ],
+      "explanation": "The structural cause is that DH groups can have many small subgroups; if a public key is a generator of one, the shared secret is constrained to that subgroup. Validating the public key (or working in a group with no exploitable small subgroups, like RFC 7919 safe primes or Curve25519 with an all-zero check) closes the leak.",
+      "tags": ["dh", "small-subgroup", "validation", "pitfalls"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch05-q05",
+      "chapterId": "ch05",
+      "kind": "code",
+      "prompt": "According to chapter 5, what is the smallest recommended size, in BITS, for the prime modulus p in a finite-field Diffie-Hellman group (the size that the RFC 7919 ffdhe2048 group uses, suitable for ~128 bits of security)? Answer with the integer.",
+      "referenceAnswer": "2048",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "Chapter 5 calls out a 2048-bit prime modulus as the smallest currently acceptable choice for plain DH; this is the size of the ffdhe2048 group from RFC 7919. ECDH gets the same security level with ~256-bit keys, which is why the chapter ultimately recommends moving to ECDH.",
+      "tags": ["dh", "parameters", "key-sizes"],
+      "difficulty": "hard"
+    }
+  ]
+}
