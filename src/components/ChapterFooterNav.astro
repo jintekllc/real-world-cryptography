@@ -11,20 +11,22 @@ const { chapter, prev, next } = Astro.props;
 
 // Part-boundary detection (D-54).
 // Last chapter of Part 1: next undefined OR next.data.part !== 1.
-//   -> "Next: Part 1 Test ->" -> /assessments/part-1-test/
+//   -> "Next: Part 1 test ->" -> /assessments/part-1-required/
 // Last chapter of Part 2: next undefined.
-//   -> "Next: Part 2 Test ->" -> /assessments/part-2-test/
+//   -> "Next: Part 2 test ->" -> /assessments/part-2-required/
+// D-101: URL slug uses '-required' (matches Plan 05-01 fixtures); visible
+// label uses 'test' (lowercase t per UI-SPEC card-title convention).
 const isLastOfPart1 = chapter.data.part === 1 && (next === undefined || next.data.part !== 1);
 const isLastOfPart2 = chapter.data.part === 2 && next === undefined;
 
 let nextHref: string | undefined;
 let nextLabel: string;
 if (isLastOfPart1) {
-  nextHref = withBase('/assessments/part-1-test/');
-  nextLabel = 'Next: Part 1 Test →';
+  nextHref = withBase('/assessments/part-1-required/');
+  nextLabel = 'Next: Part 1 test →';
 } else if (isLastOfPart2) {
-  nextHref = withBase('/assessments/part-2-test/');
-  nextLabel = 'Next: Part 2 Test →';
+  nextHref = withBase('/assessments/part-2-required/');
+  nextLabel = 'Next: Part 2 test →';
 } else if (next !== undefined) {
   nextHref = withBase(`/chapters/${next.data.chapter}/`);
   nextLabel = 'Next chapter →';

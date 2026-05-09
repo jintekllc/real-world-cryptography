@@ -23,11 +23,14 @@ export async function getStaticPaths() {
     phase: number;
     description: string;
   }> = [
-    { id: 'part-1-test',      routeName: 'Part 1 Test',      phase: 5, description: 'Required test covering Part 1: Primitives.' },
-    { id: 'part-1-challenge', routeName: 'Part 1 Challenge', phase: 5, description: 'Optional harder variant of the Part 1 test.' },
-    { id: 'part-2-test',      routeName: 'Part 2 Test',      phase: 5, description: 'Required test covering Part 2: Protocols.' },
-    { id: 'part-2-challenge', routeName: 'Part 2 Challenge', phase: 5, description: 'Optional harder variant of the Part 2 test.' },
-    { id: 'final-exam',       routeName: 'Final Exam',       phase: 5, description: 'Cumulative exam covering both parts.' },
+    { id: 'part-1-required',  routeName: 'Part 1 test',      phase: 5, description: 'Required test covering Part 1: Primitives.' },
+    { id: 'part-1-challenge', routeName: 'Part 1 challenge', phase: 5, description: 'Optional harder variant of the Part 1 test.' },
+    { id: 'part-2-required',  routeName: 'Part 2 test',      phase: 5, description: 'Required test covering Part 2: Protocols.' },
+    { id: 'part-2-challenge', routeName: 'Part 2 challenge', phase: 5, description: 'Optional harder variant of the Part 2 test.' },
+    // D-101 + RESEARCH Pattern 1: final-exam INTENTIONALLY OMITTED — handled
+    // by the static /assessments/final-exam/ + /assessments/final-exam/start/
+    // routes (Plan 05-04 Task 2a). Including it here would conflict with the
+    // explicit static route.
   ];
 
   // D-58 convention: per-chapter assessment IDs are `${chapterId}-quiz` and
