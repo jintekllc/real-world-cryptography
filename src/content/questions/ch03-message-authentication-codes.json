@@ -1,0 +1,78 @@
+{
+  "chapterId": "ch03",
+  "questions": [
+    {
+      "id": "ch03-q01",
+      "chapterId": "ch03",
+      "kind": "mc",
+      "prompt": "What does a message authentication code (MAC) provide that a plain hash function cannot?",
+      "choices": [
+        "Confidentiality of the message contents",
+        "A digest that is computable only by parties holding a shared secret key",
+        "A shorter output than the input message",
+        "A non-deterministic, randomized output for the same input"
+      ],
+      "answerIndex": 1,
+      "explanation": "Anyone can recompute a hash because the algorithm is public. A MAC mixes a secret key into the computation, so only parties who hold the key can produce or verify a valid authentication tag — that is what gives the receiver evidence the message came from someone holding the key.",
+      "tags": ["mac", "integrity", "terminology"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch03-q02",
+      "chapterId": "ch03",
+      "kind": "tf",
+      "prompt": "Attaching a MAC to every message is, by itself, sufficient to prevent an attacker from replaying old captured messages later in the conversation.",
+      "answer": false,
+      "explanation": "A MAC verifies integrity and origin of a single message, but a previously valid (message, tag) pair stays valid forever. The chapter recommends mixing in something fresh — typically a monotonically increasing counter or a nonce — so the receiver can detect a replay.",
+      "tags": ["mac", "replay", "pitfalls"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch03-q03",
+      "chapterId": "ch03",
+      "kind": "short",
+      "prompt": "When verifying an incoming MAC tag, why must the comparison between the received tag and the freshly computed tag be done in constant time?",
+      "modelAnswer": "If the comparison short-circuits at the first differing byte, the time the verification takes leaks how many leading bytes of the received tag were correct. An attacker can use that timing signal to recover the right tag one byte at a time, eventually forging a valid authentication tag without knowing the key.",
+      "rubric": [
+        "Identifies that a non-constant-time comparison leaks information via the time it takes",
+        "Names this as a timing attack (or describes byte-by-byte recovery via timing)",
+        "Explains the consequence: an attacker can incrementally guess a valid tag without the key"
+      ],
+      "explanation": "Constant-time tag comparison closes a side channel that real codebases have repeatedly leaked. Standard libraries expose a constant-time compare helper specifically for tag verification, and the chapter shows the typical XOR-OR loop pattern.",
+      "tags": ["mac", "timing-attack", "verification"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch03-q04",
+      "chapterId": "ch03",
+      "kind": "short",
+      "prompt": "Chapter 3 stresses that you should NOT build a MAC by computing SHA-256(key || message) and using its digest as the authentication tag. Briefly: which attack breaks this naive construction, and what does the chapter recommend using instead?",
+      "modelAnswer": "Because SHA-256 is built on the Merkle-Damgard construction, an attacker who has seen a valid tag for some message can mount a length-extension attack — given the tag of (key || message), they can compute the tag of (key || message || padding || extra) without knowing the key. The chapter recommends using HMAC (or, with SHA-3, KMAC) instead, which is designed to resist this attack.",
+      "rubric": [
+        "Names the length-extension attack (or describes the ability to extend a hash output without knowing the key)",
+        "Connects the weakness to SHA-256 being a Merkle-Damgard / iterated construction",
+        "States the recommended alternative: HMAC (or KMAC for SHA-3)",
+        "Implies the attacker can forge a valid tag on a longer message without ever recovering the key"
+      ],
+      "explanation": "The vulnerability is structural: Merkle-Damgard exposes its internal state through the digest, so the digest itself can be used to keep on hashing. HMAC's nested-hash design (with the inner and outer key derivations) blocks this, which is why every standard prescription points at HMAC for SHA-2 and at KMAC for SHA-3.",
+      "tags": ["mac", "hmac", "length-extension", "pitfalls"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch03-q05",
+      "chapterId": "ch03",
+      "kind": "code",
+      "prompt": "Using the first HMAC-SHA-256 test vector from RFC 4231, compute HMAC-SHA-256 with key = 0x0b repeated 20 times (20 bytes) over the ASCII message `Hi There` (8 bytes, no trailing newline). Give the resulting 32-byte authentication tag in lowercase hex. This is reproducible with, e.g., `printf 'Hi There' | openssl dgst -sha256 -mac HMAC -macopt hexkey:0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b`.",
+      "referenceAnswer": "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "HMAC-SHA-256 of `Hi There` under a 20-byte 0x0b key is RFC 4231's first test vector and is fixed by the standard. The OpenSSL CLI shown in chapter 3 (or any HMAC-SHA-256 implementation) reproduces this exact 64-character hex tag.",
+      "tags": ["mac", "hmac", "test-vector"],
+      "difficulty": "hard"
+    }
+  ]
+}
