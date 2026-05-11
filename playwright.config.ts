@@ -23,6 +23,14 @@ export default defineConfig({
   workers: process.env.CI === 'true' ? 2 : 1,
   reporter: process.env.CI === 'true' ? [['github'], ['list']] : 'list',
 
+  // WR-03: per-test timeout. The default 30s is tight for the smoke
+  // spec — 61 axe analyses run with only 2 workers in CI, so the slow
+  // tail (chapter pages with large code blocks) can approach the
+  // default. 60s gives axe + page load + assertions plenty of room
+  // without masking actual regressions; a 60s breach still surfaces
+  // as a real failure.
+  timeout: 60_000,
+
   use: {
     baseURL: `http://localhost:${PORT}${BASE}/`,
     trace: 'on-first-retry',
