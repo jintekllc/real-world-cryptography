@@ -1,0 +1,79 @@
+{
+  "chapterId": "ch12",
+  "questions": [
+    {
+      "id": "ch12-q01",
+      "chapterId": "ch12",
+      "kind": "mc",
+      "prompt": "Chapter 12 stresses that Bitcoin uses ECDSA, but on a specific curve that is NOT the NIST P-256 curve most other applications use. Which curve does Bitcoin actually use for its account signatures?",
+      "choices": [
+        "secp256k1 (a Koblitz curve, distinct from NIST's P-256 even though the names look similar)",
+        "Curve25519 / Ed25519 (the curve recommended in chapter 7 for new applications)",
+        "secp384r1, picked for its 192-bit security level against quantum-aware attackers",
+        "BLS12-381, the same pairing-friendly curve used by Ethereum's beacon chain"
+      ],
+      "answerIndex": 0,
+      "explanation": "Chapter 12 calls out that Bitcoin's signing curve is secp256k1 (a Koblitz curve), explicitly warning the reader not to confuse it with NIST's similarly-named secp256r1 (P-256). Bitcoin made the choice early, before Ed25519 was widely available, and it has stuck.",
+      "tags": ["bitcoin", "ecdsa", "secp256k1", "curves"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch12-q02",
+      "chapterId": "ch12",
+      "kind": "tf",
+      "prompt": "Once a Bitcoin transaction is included in a freshly mined block, it is permanently and irreversibly part of the blockchain — no later chain reorganization can remove it.",
+      "answer": false,
+      "explanation": "Chapter 12 is explicit that Bitcoin's consensus is not classical BFT and can fork at any height. The standard practical advice is to wait roughly six confirmation blocks before treating a transaction as final, and even then the chapter cites real-world 51% attacks (Vertcoin 2018, Ethereum Classic 2019, Bitcoin Gold 2020) where deeper reorganizations occurred and prior transactions were undone.",
+      "tags": ["bitcoin", "fork", "confirmations", "51-percent-attack"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch12-q03",
+      "chapterId": "ch12",
+      "kind": "short",
+      "prompt": "Chapter 12 contrasts a permissioned BFT consensus protocol (like DiemBFT) with a permissionless one (like Bitcoin). In two or three sentences, explain the main practical difference between the two and one mechanism a permissionless system uses to decide who is allowed to participate in consensus.",
+      "modelAnswer": "A permissioned system fixes the set of consensus participants in advance — Diem's validators, for example, are known organizations chosen up front — so the protocol can run a classical BFT algorithm with crisp safety and liveness guarantees. A permissionless system instead lets anyone join, and must therefore find a Sybil-resistant way to decide whose vote counts: Bitcoin uses proof of work (you participate by spending computation), while newer permissionless chains often use proof of stake (you participate in proportion to the currency you hold).",
+      "rubric": [
+        "Defines permissioned consensus as a fixed/known participant set",
+        "Defines permissionless consensus as anyone-can-join",
+        "Names at least one Sybil-resistance mechanism: proof of work, proof of stake, or proof of authority",
+        "May note that classical BFT algorithms (Paxos/Raft/PBFT) work only in the permissioned setting"
+      ],
+      "explanation": "The chapter frames the two settings as fundamentally different design constraints. Permissioned BFT (DiemBFT, PBFT) can hit fast finality precisely because it knows who its validators are; permissionless systems trade finality for openness and rely on economic resources (PoW hardware, PoS stake) to keep a single adversary from cheaply cloning identities.",
+      "tags": ["consensus", "permissioned", "permissionless", "pow", "pos"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch12-q04",
+      "chapterId": "ch12",
+      "kind": "short",
+      "prompt": "Chapter 12 introduces a BFT consensus protocol's two foundational guarantees: safety and liveness. Briefly define each, and explain why a classic impossibility result (Fischer-Lynch-Paterson, 1985) forces real BFT protocols to introduce timing assumptions or randomness.",
+      "modelAnswer": "Safety means no two honest participants ever commit to contradicting states — there is no fork that survives. Liveness means the protocol keeps making progress, so every legitimate transaction is eventually included. FLP 1985 proved that no deterministic consensus protocol can guarantee liveness in a fully asynchronous network where one process may fail, so practical BFT protocols (DiemBFT included) sidestep the impossibility by assuming the network is at least eventually synchronous, by injecting randomness, or both.",
+      "rubric": [
+        "Defines safety as 'no two honest nodes accept contradicting states' (no fork)",
+        "Defines liveness as 'the protocol keeps making progress / transactions are eventually committed'",
+        "References the FLP 1985 impossibility result (or a deterministic-async-with-one-faulty equivalent)",
+        "Names the practical workaround: timing assumptions (eventual synchrony) or randomized consensus"
+      ],
+      "explanation": "The safety/liveness pair is the chapter's frame for evaluating any BFT design. Safety is usually the easier half — you can refuse to commit if you are unsure — but liveness conflicts with raw asynchrony, which is why every deployable BFT protocol (Paxos's leader leases, PBFT's view-changes, DiemBFT's timeouts) makes some real-world timing assumption.",
+      "tags": ["bft", "safety", "liveness", "flp", "consensus"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch12-q05",
+      "chapterId": "ch12",
+      "kind": "code",
+      "prompt": "Chapter 12 explains that the Bitcoin block reward is not constant: it halves at a fixed cadence so that the total supply of bitcoins eventually converges to 21 million. Every how many blocks does the reward halve? Answer with the integer alone (e.g., `1000`).",
+      "referenceAnswer": "210000",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "Bitcoin's protocol cuts the per-block reward in half every 210,000 blocks. With Bitcoin's roughly ten-minute block time, that works out to about four years per halving, and a geometric series whose limit is 21,000,000 BTC. The number is the load-bearing constant behind Bitcoin's deflationary issuance schedule.",
+      "tags": ["bitcoin", "halving", "block-reward", "issuance"],
+      "difficulty": "hard"
+    }
+  ]
+}
