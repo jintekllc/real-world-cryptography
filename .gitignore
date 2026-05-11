@@ -12,6 +12,8 @@ dist/
 
 # Test output
 coverage/
+playwright-report/
+test-results/
 
 # Env / local
 .env
