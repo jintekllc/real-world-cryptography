@@ -191,6 +191,14 @@ export function safeWrite<T>(
     return true;
   } catch (err) {
     // QuotaExceededError varies across browsers. Cross-browser feature detect.
+    //
+    // WR-02: .code 22 / 1014 = belt-and-braces for legacy Safari/Firefox
+    // builds whose DOMException carried the numeric code but a generic
+    // name; modern browsers (Astro 6's Baseline 2024+ targets) emit one
+    // of the named-error strings above. Environments without DOMException
+    // (Node, certain workers) short-circuit on the LHS before .code is
+    // ever consulted, so the numeric arms are not load-bearing on Node —
+    // they are defense-in-depth for old browsers only.
     const isQuota =
       err instanceof DOMException &&
       (err.name === 'QuotaExceededError' ||
