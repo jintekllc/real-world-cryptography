@@ -7,7 +7,7 @@
   --color-surface: #18181b;       /* secondary panels, code-block fill (zinc-900) */
   --color-fg: #e4e4e7;            /* D-12: body text (zinc-200) */
   --color-muted: #a1a1aa;         /* D-12: zinc-400 */
-  --color-muted-2: #71717a;       /* D-12: zinc-500 */
+  --color-muted-2: #8a8a93;       /* D-12: bumped from zinc-500 #71717a — Plan 07-06 Task 1 axe-core WCAG 2 AA fix (contrast on bg was 4.10, on surface 3.67; both below 4.5). New tone clears 5.79:1 (bg) and 5.18:1 (surface). */
   --color-accent: #00FF66;        /* D-13: phosphor green */
   --color-accent-dim: oklch(0.85 0.3 145 / 0.5); /* flat fallback per OQ-2; reserved for Phase 4+ */
   /* D-14:: v1 ships only the seven tokens above — no warn/danger semantic colors. */
