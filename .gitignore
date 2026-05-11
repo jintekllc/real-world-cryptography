@@ -10,6 +10,9 @@ dist/
 .astro/
 .output/
 
+# Test output
+coverage/
+
 # Env / local
 .env
 .env.local
