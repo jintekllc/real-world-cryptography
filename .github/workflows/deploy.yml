@@ -1,5 +1,7 @@
 # .github/workflows/deploy.yml
-# Builds and deploys the Astro static site to GitHub Pages on every push to main.
+# Builds and deploys the Astro static site to GitHub Pages after a successful CI
+# run on main (gated via workflow_run + the build job's `if:` clause).
+# Plan 07-04 chained this to ci.yml; manual dispatch bypasses the gate.
 # D-01:: hosted at github.com/jintekllc/real-world-cryptography
 # D-19:: Pages source must be set to "GitHub Actions" in repo Settings > Pages
 # (one-time manual step before first deploy — Pitfall P1.3, locked in Plan 05 checkpoint).
@@ -7,7 +9,13 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
+  # D-PLAN-07-04: deploy chains off ci.yml (workflow named "CI"). Pages only
+  # publishes if CI completed successfully on main. workflow_dispatch remains
+  # for manual emergency deploys (bypasses the workflow_run gate via the
+  # build job's `if:` clause below).
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -27,6 +35,14 @@ jobs:
   build:
     name: Build site
     runs-on: ubuntu-latest
+    # D-PLAN-07-04: gate the build on CI success (or explicit manual dispatch).
+    # workflow_dispatch carries no `workflow_run` context, so the OR keeps the
+    # manual bypass functional; a red CI run produces `conclusion: failure` /
+    # `cancelled` / `timed_out` and this expression evaluates false, skipping
+    # the deploy entirely.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -75,6 +91,12 @@ jobs:
         # earlier "Run chokepoint gates" step because dist/ wasn't built yet.
         # If G6 fails, the deploy is aborted before the artifact upload.
         run: bash scripts/gates.sh
+
+      # Plan 07-06 inserts the production smoke step here:
+      #   - name: Production smoke test
+      #     run: |
+      #       pnpm exec playwright install --with-deps chromium
+      #       pnpm test:smoke
 
       - name: Build, package, and upload Pages artifact
         # withastro/action runs `astro build` and uploads the dist/ artifact
