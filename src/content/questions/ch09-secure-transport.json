@@ -1,0 +1,79 @@
+{
+  "chapterId": "ch09",
+  "questions": [
+    {
+      "id": "ch09-q01",
+      "chapterId": "ch09",
+      "kind": "mc",
+      "prompt": "In TLS 1.3, why are all key exchanges performed with ephemeral key pairs rather than long-term keys?",
+      "choices": [
+        "Because TLS 1.3 dropped support for the RSA cipher suites and ephemeral DH happens to be all that is left",
+        "Because the IETF wanted to shrink the size of the ClientHello message",
+        "Because session resumption requires fresh keys every time, even when using a PSK",
+        "So that a future compromise of the server's long-term private key cannot retroactively decrypt past sessions — i.e., the connection has forward secrecy"
+      ],
+      "answerIndex": 3,
+      "explanation": "Chapter 9 frames TLS 1.3's ephemeral-only stance as a forward-secrecy guarantee: each session generates fresh key pairs that are discarded once the handshake finishes, so an attacker who later steals the server's long-term signing key still cannot turn previously recorded traffic into plaintext. The earlier non-ephemeral RSA key exchange was removed precisely because it lacked this property.",
+      "tags": ["tls", "forward-secrecy", "ephemeral", "key-exchange"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch09-q02",
+      "chapterId": "ch09",
+      "kind": "tf",
+      "prompt": "TLS 1.3 still supports the same RSA-encryption-based key exchange that earlier TLS versions used, just with stricter padding.",
+      "answer": false,
+      "explanation": "Chapter 9 is explicit that RSA-based key exchanges were removed in TLS 1.3; only ephemeral key exchanges (ECDH with curves like X25519 and the RFC 7919 finite-field DH groups) remain. The motivation is forward secrecy — an RSA key-transport scheme keyed off a long-term certificate has none.",
+      "tags": ["tls", "rsa-removal", "key-exchange", "tls13"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch09-q03",
+      "chapterId": "ch09",
+      "kind": "short",
+      "prompt": "Chapter 9 splits a TLS handshake into a key-exchange phase and an authentication phase, and emphasizes that the authentication step is essential. In two or three sentences, explain why a TLS connection that ran the key exchange but skipped the authentication phase would be insecure.",
+      "modelAnswer": "Without authentication, a man-in-the-middle attacker can simply run two key exchanges, one with the client and one with the server, and end up sharing a different ephemeral secret with each side while transparently relaying messages. The CertificateVerify signature in the authentication phase is what binds the server's certified long-term key to the specific ephemeral public key that was just exchanged, which is exactly what stops that substitution attack.",
+      "rubric": [
+        "Names a man-in-the-middle or active impersonation attack as the failure mode",
+        "Explains that an unauthenticated key exchange establishes a secret with whoever answered, not with the intended peer",
+        "Mentions the CertificateVerify message or, equivalently, the server's signature over the handshake transcript as the binding mechanism",
+        "May note that confidentiality alone (an encrypted channel) without authentication leaves you encrypting to the attacker"
+      ],
+      "explanation": "Chapter 9 returns to the chapter 5 lesson that any key exchange between strangers is trivially intercepted, and shows that the TLS authentication phase — a signature over the handshake transcript, validated against a CA-issued certificate — is what closes that gap.",
+      "tags": ["tls", "authentication", "mitm", "certificate-verify"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch09-q04",
+      "chapterId": "ch09",
+      "kind": "short",
+      "prompt": "Chapter 9 notes that TLS 1.3 introduced an 'early data' (0-RTT) mode that lets the client send encrypted application data alongside its first handshake message. Briefly explain the security property 0-RTT loses compared to a normal TLS 1.3 handshake, and what kind of requests the chapter recommends restricting 0-RTT data to.",
+      "modelAnswer": "The 0-RTT data is not protected against replay: a passive eavesdropper can re-send a captured ClientHello plus its early-data payload at a later time, and the server will accept and decrypt the replay because the keys used to protect 0-RTT data are derivable from the pre-shared key alone. Because of this, the chapter recommends sending only idempotent traffic — operations like an HTTP GET that should not change state on the server — as 0-RTT data, and ideally just not using 0-RTT at all when in doubt.",
+      "rubric": [
+        "Identifies replay (not just confidentiality loss) as the property 0-RTT sacrifices",
+        "Explains that replay is possible because 0-RTT keys derive from the PSK without a fresh round-trip",
+        "Names idempotent requests (e.g., GET) as the safe content category",
+        "May add the chapter's pragmatic recommendation to avoid 0-RTT entirely when uncertain"
+      ],
+      "explanation": "0-RTT trades a network round-trip for replay risk. Because the protection keys for the early data come from a previously established PSK rather than from a fresh ephemeral exchange, a network attacker who records a ClientHello+early-data flight can re-inject it later — which is harmless for an idempotent fetch but corrupting for a state-changing call.",
+      "tags": ["tls", "tls13", "0-rtt", "replay", "early-data"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch09-q05",
+      "chapterId": "ch09",
+      "kind": "code",
+      "prompt": "Chapter 9 names the IETF RFC that specifies TLS 1.3, published in 2018. What is the RFC number? Answer with the integer alone (e.g., `1234`).",
+      "referenceAnswer": "8446",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "Chapter 9 calls out RFC 8446 as the document that specifies TLS 1.3 (published in 2018), in contrast to RFC 2246 for TLS 1.0 (1999) and RFC 7457's summary of attacks against the earlier SSL versions. Recalling the standard number is a quick anchor for following the protocol's history.",
+      "tags": ["tls", "tls13", "rfc-8446", "standards"],
+      "difficulty": "hard"
+    }
+  ]
+}
