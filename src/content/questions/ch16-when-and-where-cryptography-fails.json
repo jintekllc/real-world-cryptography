@@ -1,0 +1,79 @@
+{
+  "chapterId": "ch16",
+  "questions": [
+    {
+      "id": "ch16-q01",
+      "chapterId": "ch16",
+      "kind": "mc",
+      "prompt": "Chapter 16 cites Bernstein's 2015 coinage of 'boring cryptography' — a term the chapter says inspired Google's BoringSSL fork. Which of these best captures what 'boring cryptography' is advocating for?",
+      "choices": [
+        "Stay conservative: prefer tried-and-tested primitives and protocols, treat complexity as the enemy of security, and avoid exotic designs unless your problem genuinely demands them",
+        "Make cryptographic protocols intentionally tedious to use so that attackers lose patience before they finish exploiting them",
+        "Replace symmetric primitives like AES with stripped-down toy ciphers that are easier to audit by hand at the cost of strength",
+        "Centralize every cryptographic operation behind a single managed cloud service so application developers never touch the primitives directly"
+      ],
+      "answerIndex": 0,
+      "explanation": "Bernstein's slogan is about restraint, not about UX friction or hardware offload. The chapter pairs it with the rule that the more you can lean on standard, well-vetted primitives and avoid bespoke 'mini-protocols', the fewer ways your design can quietly fail. BoringSSL is the canonical example of taking that advice into a real codebase — fork the popular library, strip the legacy and experimental knobs, ship the boring subset.",
+      "tags": ["boring-cryptography", "bernstein", "boringssl", "conservatism"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch16-q02",
+      "chapterId": "ch16",
+      "kind": "tf",
+      "prompt": "Because the WPA2 Wi-Fi protocol had been formally verified before deployment, no protocol-level cryptographic flaw was discovered in it after release.",
+      "answer": false,
+      "explanation": "Chapter 16 calls out the 2017 KRACK attack as the textbook counterexample: WPA2 had been formally verified, and KRACK still broke it. The lesson the chapter draws is that gaps between the paper specification, its formal model, and the actually-shipped implementation are almost always present and can stay invisible until someone finds the one that matters — formal verification raises the bar but does not close every door.",
+      "tags": ["formal-verification", "krack", "wpa2", "limitations"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch16-q03",
+      "chapterId": "ch16",
+      "kind": "short",
+      "prompt": "Chapter 16 promotes the idea of a 'polite' cryptographic standard (a term it attributes to Riad Wahby). In two or three sentences, describe what makes a standard polite and contrast it with an impolite one.",
+      "modelAnswer": "A polite standard is one written so that an implementer has very little room to shoot themselves in the foot: it nails down edge cases, comes with concrete test vectors, and gives explicit guidance on how the primitive is supposed to be used in practice. An impolite standard is vague, optional in too many places, lacks test vectors, or tries to be so flexible (the chapter calls out excessive 'cryptographic agility' as a particular trap) that downstream code ends up making subtly wrong assumptions. The chapter argues that most of the cryptographic vulnerabilities it has discussed earlier ultimately trace back to impolite standards — the spec left enough freedom for someone to misuse the primitive.",
+      "rubric": [
+        "Defines a polite standard as one that minimizes implementer freedom to make mistakes",
+        "Mentions at least one concrete politeness ingredient (test vectors, explicit edge-case handling, usage guidance)",
+        "Identifies impoliteness with vagueness, excessive flexibility, or missing test vectors",
+        "May note that excessive cryptographic agility is one of the chapter's named anti-patterns"
+      ],
+      "explanation": "Politeness is the spec-level analogue of 'misuse-resistant API design': the standard itself takes responsibility for making mistakes hard. The chapter pairs this with Rivest et al's 1992 quote about not giving the user 'enough rope to hang themselves'.",
+      "tags": ["polite-cryptography", "standards", "wahby", "agility"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch16-q04",
+      "chapterId": "ch16",
+      "kind": "short",
+      "prompt": "Chapter 16 cites a 2014 Lazar/Chen/Wang/Zeldovich study on why cryptographic software fails. In two or three sentences, summarize the study's headline finding and explain why the chapter highlights it as a takeaway for application developers.",
+      "modelAnswer": "Lazar and colleagues looked at real-world cryptographic bugs and reported that only about 17% of them lived inside cryptographic libraries themselves, while roughly 83% were misuses of those libraries by the surrounding application code. The chapter highlights this split to push back against the developer instinct that 'we use a good crypto library, so we are safe' — the libraries are mostly fine, and the dominant failure mode is at the boundary where application code stitches primitives together. The downstream advice is to lean on higher-level abstractions (managed key services, language-standard crypto, misuse-resistant APIs like Google's Tink or libsodium) so the application has fewer chances to misuse a primitive in the first place.",
+      "rubric": [
+        "States the headline split: roughly 17% library bugs vs 83% application-side misuse",
+        "Attributes the finding to the 2014 Lazar/Chen/Wang/Zeldovich study (year or authors is enough)",
+        "Identifies the downstream lesson — most cryptographic risk lives at the application boundary, not inside the library",
+        "May mention misuse-resistant abstractions (Tink, libsodium, KMS-style managed services) as the chapter's recommended response"
+      ],
+      "explanation": "This is the empirical anchor for the chapter's 'developers are the enemy' framing. The right response is not to blame developers but to design libraries and abstractions that take the dangerous decisions out of their hands — Tink refusing to let you pick a nonce/IV in AES-GCM is the canonical example the chapter calls out.",
+      "tags": ["misuse", "lazar-2014", "application-bugs", "libraries"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch16-q05",
+      "chapterId": "ch16",
+      "kind": "code",
+      "prompt": "Chapter 16 cites a frequently-quoted 2014 study by Lazar, Chen, Wang, and Zeldovich on why cryptographic software fails. The study's headline number is the percentage of cryptographic bugs that are NOT inside the crypto library itself — that is, the percentage attributed to applications misusing the library. What is that percentage? Answer with the bare integer percent (e.g., `42`).",
+      "referenceAnswer": "83",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "The 2014 paper by Lazar and colleagues — a case-study survey of where real cryptographic bugs originated — reported the 17% / 83% split between in-library defects and application-level misuse. That number is the empirical justification for the chapter's emphasis on misuse-resistant APIs, managed key services, and the general framing that the cryptographic library is rarely where things go wrong.",
+      "tags": ["misuse", "lazar-2014", "statistics", "compute"],
+      "difficulty": "hard"
+    }
+  ]
+}
