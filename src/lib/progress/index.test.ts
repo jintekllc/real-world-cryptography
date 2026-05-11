@@ -268,10 +268,49 @@ describe('clearAll', () => {
       });
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     expect(clearAll()).toBe(false);
+    // WR-04: per-key warn format includes the key name so partial-failure
+    // diagnostics are precise.
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/clearAll failed/),
+      expect.stringMatching(/clearAll removeItem\(.+\) failed/),
       expect.anything(),
     );
+  });
+
+  it('clears the in-memory cache even when one removeItem throws mid-clear (WR-04)', async () => {
+    // WR-04 regression test: a mid-clear failure must NOT strand the cache
+    // with stale values for the keys that DID get removed. The previous
+    // single-try shape returned false BEFORE cache.clear() — leaving
+    // safeRead returning stale data.
+    const mod = await freshModule();
+    const { safeRead, safeWrite, clearAll } = mod;
+
+    // Pre-populate cache + storage with valid values.
+    expect(safeWrite('rwc:meta:v1', validMeta, MetaV1Schema)).toBe(true);
+    expect(safeWrite('rwc:progress:v1', validProgress, ProgressV1Schema)).toBe(true);
+    expect(safeRead('rwc:meta:v1', MetaV1Schema)).not.toBeNull();
+
+    // Throw on the SECOND removeItem call (after rwc:progress:v1 has been
+    // removed successfully). This is the partial-failure path.
+    let callCount = 0;
+    removeItemSpy = vi
+      .spyOn(window.localStorage, 'removeItem')
+      .mockImplementation((_key: string) => {
+        callCount++;
+        if (callCount === 2) throw new Error('quota exhaustion mid-clear');
+        // Otherwise, delegate to a no-op (we're not testing storage state,
+        // we're testing cache invariance under partial failure).
+      });
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    // clearAll reports failure (one removeItem threw)…
+    expect(clearAll()).toBe(false);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/clearAll removeItem\(.+\) failed/),
+      expect.anything(),
+    );
+    // …BUT the in-memory cache is empty so safeRead returns null on every key.
+    expect(safeRead('rwc:meta:v1', MetaV1Schema)).toBeNull();
+    expect(safeRead('rwc:progress:v1', ProgressV1Schema)).toBeNull();
   });
 });
 

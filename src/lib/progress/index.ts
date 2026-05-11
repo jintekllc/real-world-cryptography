@@ -229,17 +229,29 @@ export function safeWrite<T>(
 export function clearAll(): boolean {
   const storage = getStorage();
   if (storage === null) return false;
-  try {
-    storage.removeItem('rwc:progress:v1');
-    storage.removeItem('rwc:projects:v1');              // D-99.2 (Phase 5)
-    storage.removeItem('rwc:meta:v1');
-    storage.removeItem('rwc:notes:v1');                 // reserved (D-33)
-    cache.clear();
-    return true;
-  } catch (err) {
-    console.warn('[progress] clearAll failed:', err);
-    return false;
+  // WR-04: per-key try/catch so a mid-clear failure doesn't strand the
+  // chokepoint in a half-cleared state. The previous shape wrapped four
+  // sequential removeItem calls in a single try — if the second call
+  // threw (quota exhaustion mid-clear, sandbox revocation), the catch
+  // returned false BEFORE cache.clear(), leaving the in-memory cache
+  // out of sync with storage. Now each key is cleared independently and
+  // cache.clear() always runs.
+  let allOk = true;
+  for (const k of [
+    'rwc:progress:v1',
+    'rwc:projects:v1',                                  // D-99.2 (Phase 5)
+    'rwc:meta:v1',
+    'rwc:notes:v1',                                     // reserved (D-33)
+  ] as const) {
+    try {
+      storage.removeItem(k);
+    } catch (err) {
+      console.warn(`[progress] clearAll removeItem(${k}) failed:`, err);
+      allOk = false;
+    }
   }
+  cache.clear();
+  return allOk;
 }
 
 // Re-export schemas for callers that need the typed schema argument.
