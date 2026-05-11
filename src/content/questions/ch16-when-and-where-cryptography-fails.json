@@ -63,16 +63,16 @@
       "id": "ch16-q05",
       "chapterId": "ch16",
       "kind": "code",
-      "prompt": "Chapter 16 cites a frequently-quoted 2014 study by Lazar, Chen, Wang, and Zeldovich on why cryptographic software fails. The study's headline number is the percentage of cryptographic bugs that are NOT inside the crypto library itself — that is, the percentage attributed to applications misusing the library. What is that percentage? Answer with the bare integer percent (e.g., `42`).",
-      "referenceAnswer": "83",
+      "prompt": "Chapter 16's section on usable security pulls a striking clickthrough number from the memorably-titled 'Alice in Warningland' paper to motivate the concept of warning fatigue — the empirical observation that users learn to dismiss security warnings the more often they see them. What year was that paper published? Answer with the bare 4-digit year (e.g., `1999`).",
+      "referenceAnswer": "2013",
       "autoGrade": true,
       "normalization": {
         "lowercase": true,
         "strip0x": true,
         "stripWhitespace": true
       },
-      "explanation": "The 2014 paper by Lazar and colleagues — a case-study survey of where real cryptographic bugs originated — reported the 17% / 83% split between in-library defects and application-level misuse. That number is the empirical justification for the chapter's emphasis on misuse-resistant APIs, managed key services, and the general framing that the cryptographic library is rarely where things go wrong.",
-      "tags": ["misuse", "lazar-2014", "statistics", "compute"],
+      "explanation": "'Alice in Warningland' was published in 2013 by Akhawe and Felt, and §16.5 uses it as the empirical anchor for warning fatigue. The headline finding — roughly seventy percent of Chrome users clicked through the most common SSL error — is the chapter's reason to argue that pushing security decisions onto end users tends to fail, and that usable-security research should aim to make the safe path the default.",
+      "tags": ["usable-security", "warning-fatigue", "akhawe-felt-2013", "compute"],
       "difficulty": "hard"
     }
   ]
