@@ -1,0 +1,79 @@
+{
+  "chapterId": "ch13",
+  "questions": [
+    {
+      "id": "ch13-q01",
+      "chapterId": "ch13",
+      "kind": "mc",
+      "prompt": "Chapter 13 places several hardware security building blocks on a spectrum (smart card → secure element → HSM → TPM → TEE). Which of the following best describes a Trusted Platform Module (TPM) as the chapter presents it?",
+      "choices": [
+        "A pluggable USB-stick form factor used for second-factor authentication, similar to a FIDO2 hardware key",
+        "A standardized secure microcontroller (per the TPM 2.0 spec from the Trusted Computing Group) typically soldered onto a motherboard, exposing a fixed cryptographic interface rather than running arbitrary code",
+        "A rackmount appliance with a PCIe interface, certified under FIPS 140-3, used by banks for high-throughput PIN verification",
+        "A region of the main CPU's instruction set (like Intel SGX or ARM TrustZone) that lets a normal OS run sensitive code in a separate execution environment"
+      ],
+      "answerIndex": 1,
+      "explanation": "Chapter 13 places TPMs between secure elements and TEEs: a TPM is a dedicated secure microcontroller that follows the Trusted Computing Group's TPM 2.0 standard and is normally found plugged or soldered onto a motherboard, exposing a fixed, well-defined API rather than running arbitrary applications. The other choices match other categories in the chapter — FIDO key, HSM, and TEE respectively.",
+      "tags": ["tpm", "hardware", "trusted-computing-group", "tpm-2"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch13-q02",
+      "chapterId": "ch13",
+      "kind": "tf",
+      "prompt": "A trusted execution environment (TEE) such as Intel SGX provides such strong physical isolation that it is generally considered safe against motivated attackers with physical access to the chip.",
+      "answer": false,
+      "explanation": "Chapter 13 explicitly tempers TEE marketing: it lists Foreshadow, Plundervolt, MDS attacks, and SGAxe as a stream of practical breaks. The chapter's framing is that TEEs are mostly a defense against software adversaries (where they are useful), but against a motivated physical attacker the protection is far weaker than secure elements or HSMs that are built from the ground up for tamper resistance.",
+      "tags": ["tee", "sgx", "side-channel", "limits"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch13-q03",
+      "chapterId": "ch13",
+      "kind": "short",
+      "prompt": "Chapter 13 discusses 'constant-time programming' as the first line of defense against side-channel attacks on cryptographic code. In two or three sentences, explain what 'constant time' actually means in this context and one concrete coding pattern the chapter says to avoid.",
+      "modelAnswer": "Constant-time code performs the same sequence of operations and memory accesses regardless of the secret values it is processing, so an observer measuring time, power, or cache behavior cannot infer those secrets. The chapter's main don't-do-this pattern is branching on a secret — any if/else, early-return, or short-circuit comparison whose condition depends on a secret byte gives a measurable signal — and it offers the Golang ConstantTimeCompare function (a loop that XOR-accumulates every byte pair and inspects the accumulator at the end) as the canonical fix.",
+      "rubric": [
+        "Defines constant-time as the same control flow / memory accesses regardless of secret data",
+        "Identifies branching on a secret (or early returns / short-circuit comparisons) as the forbidden pattern",
+        "Mentions a constant-time idiom such as XOR-accumulate or 'never return early'",
+        "May connect it back to defeating timing, power-analysis, or cache attacks"
+      ],
+      "explanation": "Side-channel attacks live or die on signal: any difference in time, power, or cache behavior that depends on a secret bit gives the attacker that bit. Constant-time code eliminates the signal at the source by doing the same work on every input, which is why HMAC tag comparison, RSA exponentiation, and EC scalar multiplication all rely on dedicated 'square-and-multiply-always' / Montgomery-ladder / loop-XOR primitives.",
+      "tags": ["side-channel", "constant-time", "timing-attack", "hmac"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch13-q04",
+      "chapterId": "ch13",
+      "kind": "short",
+      "prompt": "Chapter 13 introduces 'blinding' as a software defense against side-channel attacks on public-key operations. In two or three sentences, describe how base blinding protects an RSA decryption and what the attacker would observe instead of the real ciphertext.",
+      "modelAnswer": "Before decrypting, the implementation generates a fresh random blinding factor r, computes r raised to the public exponent e, and multiplies the incoming ciphertext c by that value modulo N; it then performs the private-exponent operation on the masked value and finally multiplies the result by r⁻¹ mod N to recover the real plaintext. From the side-channel attacker's perspective, the secret exponent d is being applied to a different random-looking input on every operation, so any per-bit leakage they collect no longer correlates with one fixed ciphertext and cannot be averaged into a key recovery.",
+      "rubric": [
+        "Describes generating a fresh random blinding factor r per decryption",
+        "Describes multiplying the ciphertext by r^e mod N before the private operation",
+        "Describes unblinding the output by multiplying by r⁻¹ mod N",
+        "Notes that the attacker's leakage now corresponds to a different input each time, defeating averaging-based DPA-style attacks"
+      ],
+      "explanation": "Base blinding randomizes the input to the secret operation. The attacker can still observe a side channel for each decryption, but those traces now correspond to different (random) values, so averaging them no longer extracts a stable signal tied to the private exponent. The same idea drives scalar blinding for ECC and is conceptually related to the OPRF blinding step from chapter 11.",
+      "tags": ["side-channel", "blinding", "rsa", "dpa"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch13-q05",
+      "chapterId": "ch13",
+      "kind": "code",
+      "prompt": "Chapter 13 names the current US Federal Information Processing Standard for cryptographic modules — the one published in 2019 that supersedes the older 2001 version — as the standard against which HSMs are typically certified. What is the full FIPS publication number? Answer with the publication identifier alone (e.g., `FIPS 999`).",
+      "referenceAnswer": "FIPS 140-3",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "FIPS 140-3, published in 2019, replaced FIPS 140-2 (which dated back to 2001) as the certification target for cryptographic modules. The chapter pairs it with the underlying ISO/IEC 19790:2012 (four security levels) and ISO 24759:2017 (testing methodology) standards that 140-3 references, and notes that US/Canada banking regulations effectively mandate certified modules.",
+      "tags": ["hsm", "fips", "fips-140-3", "certification"],
+      "difficulty": "hard"
+    }
+  ]
+}
