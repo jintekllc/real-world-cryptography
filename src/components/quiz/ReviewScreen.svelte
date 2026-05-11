@@ -3,6 +3,7 @@
   import { withBase } from '~/lib/url';
   import { partSubtotalFromVerdicts } from '~/lib/quiz/partSubtotal';
   import { chapterBreakdownFromVerdicts, type ChapterRow } from '~/lib/quiz/chapterBreakdown';
+  import Certificate from '~/components/exam/Certificate.svelte';
 
   let {
     questions,
@@ -130,6 +131,10 @@
         </div>
       </details>
     {/each}
+
+    {#if passed}
+      <Certificate score={score} />
+    {/if}
   {:else}
     <h3 class="mt-12 text-xl font-semibold">Review</h3>
     <ul class="mt-4 space-y-12">
