@@ -1,0 +1,79 @@
+{
+  "chapterId": "ch15",
+  "questions": [
+    {
+      "id": "ch15-q01",
+      "chapterId": "ch15",
+      "kind": "mc",
+      "prompt": "Chapter 15 frames secure multi-party computation (MPC) by contrasting it with one specific design alternative that has the same functional outcome but a much worse trust story. Which alternative is it?",
+      "choices": [
+        "A blockchain-based smart contract running on a public chain like Ethereum",
+        "A trusted execution environment (TEE) such as Intel SGX that runs the computation on the user's CPU",
+        "A trusted third party — for example, a central server everyone hands their inputs to, which runs the program and returns the answer",
+        "A homomorphic encryption scheme that operates on encrypted inputs from each participant"
+      ],
+      "answerIndex": 2,
+      "explanation": "Chapter 15 introduces MPC explicitly as a replacement for a trusted-third-party model. The textbook example is Yao's 1982 Millionaires' Problem: two participants want a function of their joint inputs (who is richer?) without handing those inputs to anyone, and MPC removes the central party that the naive design would otherwise need. The TEE, blockchain, and FHE alternatives are different points on the trust-spectrum the chapter walks through, but the framing for MPC is specifically 'how do we delete the trusted third party?'",
+      "tags": ["mpc", "trusted-third-party", "millionaires-problem", "yao"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch15-q02",
+      "chapterId": "ch15",
+      "kind": "tf",
+      "prompt": "Plain RSA encryption is already fully homomorphic: a third party can take an RSA ciphertext and compute the encryption of any function of the plaintext just by manipulating the ciphertext.",
+      "answer": false,
+      "explanation": "Chapter 15 uses RSA as the canonical example of partial homomorphism: you can multiply two RSA ciphertexts and decryption recovers the product of the underlying plaintexts, but RSA gives you no equivalent operation for addition. Without both operations, arbitrary functions cannot be expressed, so RSA is only partially (not fully) homomorphic — and the chapter notes that production RSA padding schemes intentionally break even that partial property to prevent attacks like Bleichenbacher's.",
+      "tags": ["rsa", "homomorphic", "partial-homomorphism", "fhe"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch15-q03",
+      "chapterId": "ch15",
+      "kind": "short",
+      "prompt": "Chapter 15 describes how a noise-based fully homomorphic encryption scheme can keep running indefinitely thanks to a technique called 'bootstrapping'. In two or three sentences, explain the problem bootstrapping solves and the rough idea behind how it solves it.",
+      "modelAnswer": "Every homomorphic operation on a ciphertext adds noise to it, and once that noise crosses a threshold the ciphertext can no longer be decrypted correctly — which is why early schemes were only 'somewhat' or 'leveled' homomorphic, supporting a bounded number of operations. Bootstrapping refreshes a noisy ciphertext by homomorphically running the decryption circuit on it, using an encrypted copy of the secret key (the bootstrapping key) as input, which produces a brand-new ciphertext of the same plaintext with the noise reset back to a manageable level. Inserting a bootstrap after enough operations lets the scheme keep computing forever, which is what turns 'leveled' FHE into truly fully homomorphic encryption.",
+      "rubric": [
+        "Identifies noise accumulation per homomorphic operation as the problem",
+        "Explains that bootstrapping homomorphically evaluates the decryption circuit on the ciphertext",
+        "Mentions the bootstrapping key (an encryption of the secret key under itself or another key)",
+        "Notes that the output is a fresh ciphertext of the same plaintext with refreshed (lower) noise"
+      ],
+      "explanation": "Bootstrapping is the trick that earned Craig Gentry's 2009 PhD construction its breakthrough status. Before bootstrapping, every known homomorphic encryption scheme was limited to a bounded number of operations because of accumulating noise; bootstrapping shows that you can use the scheme on itself — encrypting the decryption circuit and running it as a regular FHE operation — to refresh the ciphertext without ever decrypting the plaintext.",
+      "tags": ["fhe", "bootstrapping", "gentry", "noise"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch15-q04",
+      "chapterId": "ch15",
+      "kind": "short",
+      "prompt": "Chapter 15 introduces zk-SNARKs and unpacks the acronym into four properties. Name each of the four properties (one short phrase each) and briefly say what 'succinct' specifically means in the context of zk-SNARK proofs.",
+      "modelAnswer": "The four properties are: zero-knowledge (the proof reveals nothing about the prover's secret inputs beyond the statement being true), succinct (proofs are short and fast to verify — typically a few hundred bytes and a few milliseconds, regardless of how big the underlying computation is), non-interactive (the prover ships a single proof artifact with no back-and-forth conversation needed), and argument of knowledge (the protocol gives a computationally-sound guarantee that the prover actually knows a valid witness, not just that one exists somewhere). The succinctness in particular is the property the Schwartz-Zippel lemma buys you: by checking a commitment at one random point in a group instead of comparing whole polynomials, the verifier's work and the proof's size stay tiny even as the computation being proved grows huge.",
+      "rubric": [
+        "Names zero-knowledge and describes it as hiding the prover's secret inputs",
+        "Names succinct and gives the operational meaning (small proofs / fast verification, sublinear in the underlying computation)",
+        "Names non-interactive and describes it as a single-shot proof with no challenge-response chatter",
+        "Names argument of knowledge (or 'proof of knowledge') and ties it to the prover actually possessing a witness"
+      ],
+      "explanation": "Each letter of zk-SNARK is doing real work. Zero-knowledge keeps the witness private; succinctness — proofs of a few hundred bytes verified in milliseconds — is what makes ZKPs deployable in blockchain settings; non-interactivity (often achieved via the Fiat-Shamir trick) means the prover and verifier do not need to be online at the same time; and 'argument of knowledge' formalizes the soundness flavor that says the prover must know the secret value, not just that one exists.",
+      "tags": ["zk-snark", "zero-knowledge", "succinct", "argument-of-knowledge"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch15-q05",
+      "chapterId": "ch15",
+      "kind": "code",
+      "prompt": "Chapter 15 anchors its FHE section in a single year — the year a PhD student of Dan Boneh published the first construction proving that fully homomorphic encryption was actually possible (via the bootstrapping technique). In what year was that breakthrough construction published? Answer with the four-digit year alone (e.g., `1999`).",
+      "referenceAnswer": "2009",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "Craig Gentry's 2009 PhD-thesis construction (\"Computing Arbitrary Functions of Encrypted Data\") was the first ever fully homomorphic encryption scheme. The chapter notes the original construction took about 30 minutes per basic bit operation — utterly impractical, but a watershed moment that converted FHE from speculative dream to active research field, and the subsequent decade brought roughly a 10^9 speed-up.",
+      "tags": ["fhe", "gentry", "bootstrapping", "2009"],
+      "difficulty": "hard"
+    }
+  ]
+}
