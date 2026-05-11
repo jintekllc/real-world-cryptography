@@ -1,0 +1,79 @@
+{
+  "chapterId": "ch11",
+  "questions": [
+    {
+      "id": "ch11-q01",
+      "chapterId": "ch11",
+      "kind": "mc",
+      "prompt": "Chapter 11 motivates asymmetric (augmented) PAKEs like OPAQUE with one specific security gain over a plain 'hash the password on the server' approach. Which of the following best captures that gain?",
+      "choices": [
+        "OPAQUE is faster than Argon2-based hashing at login time",
+        "OPAQUE allows the user to choose a longer password than a normal login form does",
+        "The server never learns the user's password — not at registration, not at login, not even briefly — so a database breach yields no password material for the attacker to brute-force",
+        "OPAQUE produces a session cookie that cannot be stolen by an XSS attack on the website"
+      ],
+      "answerIndex": 2,
+      "explanation": "Chapter 11 frames OPAQUE as a way to authenticate a user without the server ever seeing the password in cleartext at registration or login. The OPRF step has the server help derive a symmetric key from the password without learning the password itself, so a database compromise gives an attacker only an encrypted key-pair backup tied to a per-user OPRF secret — not a hash they can plug straight into a GPU cracker.",
+      "tags": ["pake", "opaque", "password", "oprf"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch11-q02",
+      "chapterId": "ch11",
+      "kind": "tf",
+      "prompt": "Because TOTP codes change every 30 or 60 seconds and are different every time, a TOTP-based login flow cannot be defeated by a phishing attacker.",
+      "answer": false,
+      "explanation": "Chapter 11 explicitly calls out phishing as a real attack on TOTP. The TOTP code expires quickly, but it is still a small number the user can be social-engineered into typing into an attacker-controlled prompt, and the attacker then relays it to the real service within the same time window. FIDO2/WebAuthn is the chapter's recommended fix because it cryptographically binds the response to the visited site's origin.",
+      "tags": ["totp", "phishing", "fido2", "mfa"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch11-q03",
+      "chapterId": "ch11",
+      "kind": "short",
+      "prompt": "Chapter 11 distinguishes two different things that the single word 'authentication' is commonly used for in cryptography. Briefly name and define each of the two senses, and give one example of where each one shows up earlier in the book.",
+      "modelAnswer": "Message (or payload) authentication is proving that a message has not been altered and was produced by someone who holds the right key — for example, the MAC tag check in chapter 3 or the integrity guarantee of an AEAD in chapter 4. Origin (or identity / entity) authentication is proving who is on the other end of a protocol — for example, the server's certificate-and-signature step in the TLS handshake in chapter 9 or the safety-number verification in Signal in chapter 10.",
+      "rubric": [
+        "Names message/payload authentication and defines it as integrity / unforgeability of a specific message",
+        "Names origin/entity/identity authentication and defines it as proving who you are talking to",
+        "Cites a message-authentication example (MAC, HMAC, AEAD, signed message)",
+        "Cites an identity-authentication example (TLS server auth, Signal fingerprint, certificate)"
+      ],
+      "explanation": "The chapter opens by warning that the same word covers two distinct concerns: tag-verifying a single payload and confirming the identity of a peer. Mixing the two up is a common source of muddled protocol designs, which is why chapter 11 carves them apart before getting into user authentication proper.",
+      "tags": ["authentication", "terminology", "mac", "identity"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch11-q04",
+      "chapterId": "ch11",
+      "kind": "short",
+      "prompt": "Chapter 11 explains that the FIDO2 standard was specifically designed to resist phishing in a way that TOTP does not. In two or three sentences, explain the mechanism FIDO2 uses to achieve that anti-phishing property.",
+      "modelAnswer": "A FIDO2 hardware authenticator stores a per-site private key and only signs an authentication challenge after the browser hands it the verified origin (the domain) of the page asking for the signature. If the user has been lured to a look-alike domain, the authenticator either has no key registered for that origin or it signs over the wrong origin string — either way the real service rejects the response, so the attacker cannot relay the answer. The credential is, in effect, cryptographically scoped to the legitimate site rather than to a short human-typed string.",
+      "rubric": [
+        "Mentions a per-site / origin-bound key pair stored on the authenticator",
+        "Identifies the browser (via WebAuthn / CTAP) as the party that passes the verified origin to the authenticator",
+        "Explains that signing is over (or includes) the origin, so a wrong-domain response is rejected",
+        "May contrast with TOTP, where the user can type the code into any prompt that asks"
+      ],
+      "explanation": "FIDO2 splits responsibility: WebAuthn lets the browser tell the hardware key which site is asking, and the hardware key signs a challenge that includes (or is keyed to) that origin. A phishing site at the wrong domain therefore receives a signature the real service will not accept — phishing-resistance falls out of the protocol shape, not user vigilance.",
+      "tags": ["fido2", "webauthn", "phishing-resistance", "hardware-authenticator"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch11-q05",
+      "chapterId": "ch11",
+      "kind": "code",
+      "prompt": "Chapter 11 names the IETF RFC that standardizes TOTP — the time-based OTP scheme that mobile apps like Google Authenticator implement. What is the RFC number? Answer with the integer alone (e.g., `1234`).",
+      "referenceAnswer": "6238",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "Chapter 11 explicitly pairs RFC 6238 with TOTP (time-based) and RFC 4226 with HOTP (HMAC-counter-based), and notes that most modern deployments choose TOTP because it does not require both sides to keep a synchronized counter. Recalling 6238 is a quick anchor for the time-based variant.",
+      "tags": ["totp", "rfc-6238", "standards", "otp"],
+      "difficulty": "hard"
+    }
+  ]
+}
