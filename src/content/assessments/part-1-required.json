@@ -1,6 +1,6 @@
 {
   "id": "part-1-required",
-  "title": "Part 1 test",
+  "title": "Part 1 required test",
   "kind": "part-test",
   "passThreshold": 0.75,
   "questionIds": [
