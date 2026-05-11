@@ -62,8 +62,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Sync Astro types (vitest reads ~/content.config types)
         run: pnpm exec astro sync
-      - name: Run Vitest
-        run: pnpm test:unit
+      - name: Run Vitest (with coverage thresholds — CR-01)
+        run: pnpm test:coverage
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v4
