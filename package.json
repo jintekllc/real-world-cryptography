@@ -14,7 +14,11 @@
     "check": "astro sync && astro check",
     "astro": "astro",
     "gates": "bash scripts/gates.sh",
-    "gates:dist": "pnpm build && bash scripts/gates.sh"
+    "gates:dist": "pnpm build && bash scripts/gates.sh",
+    "test": "pnpm test:unit",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@astrojs/svelte": "8.1.0",
@@ -25,7 +29,10 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "@tailwindcss/vite": "4.2.4",
+    "@vitest/coverage-v8": "^4.1.6",
+    "happy-dom": "^20.9.0",
     "tailwindcss": "4.2.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.6"
   }
 }
