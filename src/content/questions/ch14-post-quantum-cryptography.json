@@ -1,0 +1,79 @@
+{
+  "chapterId": "ch14",
+  "questions": [
+    {
+      "id": "ch14-q01",
+      "chapterId": "ch14",
+      "kind": "mc",
+      "prompt": "Chapter 14 contrasts Shor's algorithm and Grover's algorithm as the two main quantum threats to today's cryptography. Which of the following best summarizes the asymmetric impact of those two algorithms?",
+      "choices": [
+        "Shor breaks symmetric ciphers like AES; Grover breaks RSA and elliptic-curve cryptography",
+        "Both algorithms break asymmetric cryptography catastrophically and have no impact on symmetric primitives",
+        "Both algorithms apply only to hash functions; encryption schemes are unaffected",
+        "Shor breaks integer factorization and the discrete-log problem (so RSA, DH, and ECC fall), while Grover only gives a square-root speed-up against generic searches — meaning symmetric algorithms survive by roughly doubling key sizes"
+      ],
+      "answerIndex": 3,
+      "explanation": "The chapter draws a sharp line between the two algorithms: Shor is catastrophic for asymmetric primitives whose security rests on factorization or discrete log (RSA, DH, ECDH, ECDSA, EdDSA), while Grover only offers an O(√N) speed-up for generic black-box search. The practical consequence is that symmetric cryptography keeps working by stepping key sizes up — for example, upgrading AES-128 to AES-256 and moving hash digests from 256 bits to 512 bits — but asymmetric cryptography needs entirely new primitives.",
+      "tags": ["quantum", "shor", "grover", "post-quantum"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch14-q02",
+      "chapterId": "ch14",
+      "kind": "tf",
+      "prompt": "Quantum key distribution (QKD) is currently the recommended way to defend a key exchange against a future quantum computer, and it works as a drop-in replacement for ECDH in protocols like TLS.",
+      "answer": false,
+      "explanation": "Chapter 14 explicitly disagrees with QKD as a deployable solution: QKD still needs a separate authenticated channel to defeat a man-in-the-middle attacker, it requires special quantum-physics hardware, and the chapter quotes Bruce Schneier's blunt 'QKD as a product has no future' verdict. The chapter's recommended path is post-quantum cryptography (hash-based and lattice-based schemes), not QKD.",
+      "tags": ["qkd", "post-quantum", "schneier", "limits"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch14-q03",
+      "chapterId": "ch14",
+      "kind": "short",
+      "prompt": "Chapter 14 introduces Lamport one-time signatures (OTS) as the simplest quantum-resistant signature scheme. In two or three sentences, sketch the key-generation step for a single-bit Lamport signing key and the signing rule, and identify the property of the underlying hash function the scheme actually relies on.",
+      "modelAnswer": "Generate two random values x and y as the private key, then publish h(x) and h(y) as the matching public key. To sign a 0, reveal x; to sign a 1, reveal y; the verifier just hashes what was revealed and checks it against the right slot of the public key. The scheme relies on pre-image resistance of h — the hash being one-way — and notably does not require collision resistance, which is why it is naturally quantum-resistant since hash one-wayness survives Grover (with only the square-root speed-up that doubling the digest absorbs).",
+      "rubric": [
+        "Names two random secrets x and y as the per-bit private key",
+        "Names h(x) and h(y) as the corresponding public key",
+        "States the signing rule: reveal x for bit 0, reveal y for bit 1 (or equivalent)",
+        "Identifies pre-image resistance / one-wayness of h as the load-bearing property"
+      ],
+      "explanation": "Lamport's 1979 scheme is the canonical 'signatures from hashes alone' construction. Its quantum resistance is inherited from hash functions, which only suffer a square-root weakening under Grover — manageable by doubling output sizes. Practical descendants (WOTS for shorter keys, XMSS and SPHINCS+ for many-time signatures) all build on this same Lamport-style core.",
+      "tags": ["lamport", "ots", "hash-based-signatures", "pre-image-resistance"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch14-q04",
+      "chapterId": "ch14",
+      "kind": "short",
+      "prompt": "Chapter 14 presents Kyber and Dilithium as the lattice-based NIST PQC candidates and ties both back to the Learning With Errors (LWE) problem. In two or three sentences, sketch what the LWE problem asks and why adding a small error vector is what makes it hard.",
+      "modelAnswer": "LWE asks: given a matrix A and a vector t = A·s + e (where s is a secret integer vector and e is a small random 'error' vector, all reduced modulo some large q), can you recover s? Without the error, this is just a linear system and Gaussian elimination cracks it instantly; the small additive errors corrupt each equation just enough that Gaussian elimination diverges, and recovering s reduces to a lattice problem (essentially CVP) that has no known efficient classical or quantum algorithm. Kyber's public key is exactly that t = A·s + e plus a fresh ephemeral version of the same structure for encryption.",
+      "rubric": [
+        "Names LWE as recovering a secret vector s from t = A·s + e modulo q",
+        "Identifies that without the error vector the system is trivially solvable by Gaussian elimination",
+        "Identifies the small error e as what destroys the efficient classical solution and reduces the problem to a lattice problem (CVP / SVP)",
+        "May tie Kyber's key generation (public key = (A, A·s + e)) or Dilithium's signing to LWE"
+      ],
+      "explanation": "LWE's elegance is exactly that one tiny twist on linear algebra: a noiseless system is high-school easy, while the noisy version is conjecturally as hard as approximating the closest vector in a lattice. Both Kyber and Dilithium are built directly on this trapdoor, which is why the chapter's parameter sizes (1 KB public keys, modest signatures) are achievable in a post-quantum world that hash-only schemes like SPHINCS+ struggle to match.",
+      "tags": ["lwe", "kyber", "dilithium", "lattice", "crystals"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch14-q05",
+      "chapterId": "ch14",
+      "kind": "code",
+      "prompt": "Chapter 14 names the IETF RFC that standardizes XMSS, the stateful hash-based signature scheme that NIST has recommended (in SP 800-208) as an early post-quantum option. What is the RFC number? Answer with the integer alone (e.g., `1234`).",
+      "referenceAnswer": "8391",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "RFC 8391 is XMSS — the eXtended Merkle Signature Scheme — which extends Merkle's hash-tree signature idea with stateful counter tracking and seed-based subkey derivation. The chapter pairs RFC 8391 with NIST SP 800-208 as the recommended path for organizations that want a deployable post-quantum signature today rather than waiting for the lattice-based finalists.",
+      "tags": ["xmss", "rfc-8391", "hash-based-signatures", "nist-pqc"],
+      "difficulty": "hard"
+    }
+  ]
+}
