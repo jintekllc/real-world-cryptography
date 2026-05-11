@@ -142,18 +142,35 @@ function extractBook() {
 // Build the book n-gram set + first-page index map.
 //   - bookNgrams: Set<string> of every 8-gram in normalized book text
 //   - pageOf:    Map<string, number> mapping each n-gram to the FIRST 1-based
-//                page on which it occurs (for actionable failure reports).
+//                page on which it occurs (for actionable failure reports). When
+//                an n-gram's tokens span a page break, the reported page is the
+//                page of the FIRST token in the matching window — caller can
+//                infer "pages N..N+1" by walking adjacent tokenPage entries if
+//                richer attribution is needed.
+//
+// Per WR-01 (06-REVIEW): slide the 8-gram window over the FULL book token
+// stream (concatenated across pages) so verbatim 8-grams that straddle a page
+// boundary are not silently missed. Earlier per-page tokenization left every
+// page boundary as a blind spot — every 8-token sequence whose first token
+// landed on page N and whose last token landed on page N+1 was uninserted.
 function buildBookIndex(pages) {
   const bookNgrams = new Set();
   const pageOf = new Map();
+  // Flatten while remembering which page each token came from.
+  const allTokens = [];
+  const tokenPage = [];
   for (let i = 0; i < pages.length; i++) {
-    const tokens = tokenize(normalize(pages[i]));
-    if (tokens.length < N) continue;
-    for (let j = 0; j + N <= tokens.length; j++) {
-      const gram = tokens.slice(j, j + N).join(' ');
-      bookNgrams.add(gram);
-      if (!pageOf.has(gram)) pageOf.set(gram, i + 1);
+    const toks = tokenize(normalize(pages[i]));
+    for (const t of toks) {
+      allTokens.push(t);
+      tokenPage.push(i + 1);
     }
+  }
+  if (allTokens.length < N) return { bookNgrams, pageOf };
+  for (let j = 0; j + N <= allTokens.length; j++) {
+    const gram = allTokens.slice(j, j + N).join(' ');
+    bookNgrams.add(gram);
+    if (!pageOf.has(gram)) pageOf.set(gram, tokenPage[j]);
   }
   return { bookNgrams, pageOf };
 }
