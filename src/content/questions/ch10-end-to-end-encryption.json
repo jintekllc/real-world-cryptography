@@ -1,0 +1,79 @@
+{
+  "chapterId": "ch10",
+  "questions": [
+    {
+      "id": "ch10-q01",
+      "chapterId": "ch10",
+      "kind": "mc",
+      "prompt": "Chapter 10 argues that a regular TLS connection between a user and a service is NOT end-to-end encryption. What is the key reason it gives?",
+      "choices": [
+        "TLS uses symmetric encryption, and end-to-end encryption requires asymmetric encryption",
+        "TLS terminates at the service's server, which sees every message in cleartext and is a trusted third party to the protocol",
+        "TLS does not provide forward secrecy, so old messages can still be decrypted",
+        "TLS authentication relies on the web PKI, which end-to-end encryption forbids"
+      ],
+      "answerIndex": 1,
+      "explanation": "The chapter draws E2EE as a property of the human-to-human path: with plain TLS the server in the middle is both able to decrypt every message (TLS is per-hop, not end-to-end) and is required to make the protocol function. End-to-end encryption, by contrast, has cleartext live only on the two participating users' devices.",
+      "tags": ["e2ee", "tls-contrast", "trust-model", "middlebox"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch10-q02",
+      "chapterId": "ch10",
+      "kind": "tf",
+      "prompt": "OpenPGP, as it is deployed in practice today, provides authenticated encryption out of the box, so an attacker who intercepts a PGP-encrypted email cannot tamper with the ciphertext in any meaningful way.",
+      "answer": false,
+      "explanation": "Chapter 10 spends much of its PGP critique on exactly this point: OpenPGP's hybrid encryption is unauthenticated, which is one of the chapter's main reasons for recommending against PGP today. The Efail research the chapter cites turned that missing integrity into practical exfiltration attacks against real mail clients.",
+      "tags": ["pgp", "openpgp", "authenticated-encryption", "efail"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch10-q03",
+      "chapterId": "ch10",
+      "kind": "short",
+      "prompt": "Chapter 10 says Signal uses 'trust on first use' (TOFU) and that TOFU is also the model used by SSH. In two or three sentences, explain what TOFU is and what kind of attacker it does not stop.",
+      "modelAnswer": "TOFU means the application blindly accepts the peer's public key (or fingerprint) the very first time it sees it, and then treats any later change to that key as a rejection-worthy event. The model is cheap and usable, but it offers no protection against an active man-in-the-middle who is already present during that first exchange — they can substitute their own key into the initial introduction and TOFU will happily lock onto the wrong one.",
+      "rubric": [
+        "Describes TOFU as accepting the peer's key on the first encounter without prior verification",
+        "Notes that subsequent changes to the key are flagged or refused (key pinning behavior)",
+        "Identifies an active man-in-the-middle present at the first connection as the failure case",
+        "May mention that out-of-band fingerprint comparison (safety numbers, QR codes) is the standard mitigation"
+      ],
+      "explanation": "TOFU trades a theoretical guarantee for a practical one: instead of forcing a key-signing ceremony before any conversation can start, applications give the user the option to confirm later via an out-of-band fingerprint check. Most users skip the check, which is why TOFU's guarantee in practice is 'only the first connection can be MITM'd.'",
+      "tags": ["e2ee", "tofu", "signal", "ssh", "trust"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ch10-q04",
+      "chapterId": "ch10",
+      "kind": "short",
+      "prompt": "Chapter 10 introduces Signal's Double Ratchet protocol and emphasizes two security properties it provides after the X3DH handshake completes. Briefly name those two properties and, in one short line each, the ratchet that delivers each property.",
+      "modelAnswer": "Forward secrecy — the symmetric (KDF-chain) ratchet advances a chain key with a one-way function every time a message is sent or received, so capturing a current chain key reveals nothing about prior message keys. Post-compromise security (also called backward secrecy) — the Diffie-Hellman ratchet mixes a fresh ephemeral DH output into the chain at each message round, so once an attacker who learned the state loses access, the protocol self-heals and future messages become unreadable to them again.",
+      "rubric": [
+        "Names forward secrecy and ties it to the symmetric / chain-key ratchet (one-way KDF advance)",
+        "Names post-compromise (or backward) secrecy and ties it to the Diffie-Hellman ratchet",
+        "Explains forward secrecy as 'past messages stay safe if current state is leaked'",
+        "Explains post-compromise security as 'future messages recover after the leak ends because of fresh DH entropy'"
+      ],
+      "explanation": "The Double Ratchet is really two ratchets stacked: a per-message symmetric ratchet (one-way advance of the chain key with each message) gives forward secrecy, and a periodic DH ratchet (a fresh ephemeral DH exchange piggy-backed onto messages) injects new entropy so the session can recover from a state compromise. That combination is what lets Signal stay safe across years-long conversations.",
+      "tags": ["signal", "double-ratchet", "forward-secrecy", "post-compromise-security"],
+      "difficulty": "normal"
+    },
+    {
+      "id": "ch10-q05",
+      "chapterId": "ch10",
+      "kind": "code",
+      "prompt": "Signal's X3DH handshake (Extended Triple Diffie-Hellman) is named for the number of Diffie-Hellman key exchanges it combines (with one additional DH exchange optionally folded in when the recipient still has a one-time prekey available). Per chapter 10, what is the minimum number of DH key exchanges X3DH combines? Answer with the integer alone (e.g., `2`).",
+      "referenceAnswer": "3",
+      "autoGrade": true,
+      "normalization": {
+        "lowercase": true,
+        "strip0x": true,
+        "stripWhitespace": true
+      },
+      "explanation": "Chapter 10 walks through three baseline DH exchanges in X3DH — Alice's identity key with Bob's signed prekey, Alice's ephemeral key with Bob's identity key, and Alice's ephemeral key with Bob's signed prekey — and notes that a fourth DH against a one-time prekey is added when one is available on the server. The 'triple' in X3DH is precisely the minimum-three count, with the fourth as the conditional fold-in.",
+      "tags": ["signal", "x3dh", "key-exchange", "counting"],
+      "difficulty": "hard"
+    }
+  ]
+}
