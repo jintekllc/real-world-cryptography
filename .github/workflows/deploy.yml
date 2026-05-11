@@ -92,11 +92,21 @@ jobs:
         # If G6 fails, the deploy is aborted before the artifact upload.
         run: bash scripts/gates.sh
 
-      # Plan 07-06 inserts the production smoke step here:
-      #   - name: Production smoke test
-      #     run: |
-      #       pnpm exec playwright install --with-deps chromium
-      #       pnpm test:smoke
+      - name: Install Playwright Chromium for smoke
+        # Plan 07-06: the production smoke step (next) runs Playwright against
+        # `astro preview` serving the locally-built dist/. The browser binary
+        # is not cached on the runner, so install it (with system deps) on
+        # every run. Chromium-only mirrors playwright.config.ts (v1 lock).
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Production smoke test
+        # Plan 07-06: tests/e2e/production-smoke.spec.ts walks every emitted
+        # route (61 in v1) and asserts response.ok() + no console errors + no
+        # critical axe violations. This is the LAST gate before publish — if
+        # any route fails, abort the deploy. Runs against the dist/ produced
+        # by the previous "Build site locally" step (Playwright's webServer
+        # config spawns `astro preview` against it).
+        run: pnpm test:smoke
 
       - name: Build, package, and upload Pages artifact
         # withastro/action runs `astro build` and uploads the dist/ artifact
