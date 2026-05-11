@@ -88,10 +88,17 @@ test.describe('Chapter quiz flow: hello-crypto-quiz', () => {
     // Step 3 — review screen visible with a verdict heading
     await expect(page.getByRole('heading', { name: /PASSED|DID NOT PASS/ })).toBeVisible();
 
-    // Step 4 — localStorage has the progress key with this attempt
+    // Step 4 — localStorage has the progress key with this attempt.
+    //
+    // WR-05: assert shape before parsing. The previous form used
+    // `JSON.parse(progress!)` with a non-null assertion — if a regression
+    // ever wrote 'undefined' or another non-JSON string, JSON.parse would
+    // throw a SyntaxError whose stack points at the test runner, not at
+    // this assertion. Matching a known-good substring first gives a clean
+    // diagnostic failure if the chokepoint regresses.
     const progress = await page.evaluate(() => localStorage.getItem('rwc:progress:v1'));
-    expect(progress, 'rwc:progress:v1 should be populated after submit').not.toBeNull();
-    const parsed = JSON.parse(progress!);
+    expect(progress, 'rwc:progress:v1 populated after submit').toMatch(/"version":\s*1/);
+    const parsed = JSON.parse(progress as string);
     expect(parsed.version).toBe(1);
     expect(parsed.assessments['hello-crypto-quiz']).toBeDefined();
     expect(parsed.assessments['hello-crypto-quiz'].recent.length).toBe(1);
