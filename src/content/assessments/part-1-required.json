@@ -4,13 +4,21 @@
   "kind": "part-test",
   "passThreshold": 0.75,
   "questionIds": [
-    "ch01-q90",
-    "ch02-q90",
-    "ch03-q90",
-    "ch04-q90",
-    "ch05-q90",
-    "ch06-q90",
-    "ch07-q90",
-    "ch08-q90"
+    "ch01-q01",
+    "ch01-q04",
+    "ch02-q01",
+    "ch02-q04",
+    "ch03-q01",
+    "ch03-q04",
+    "ch04-q01",
+    "ch04-q04",
+    "ch05-q01",
+    "ch05-q04",
+    "ch06-q01",
+    "ch06-q04",
+    "ch07-q01",
+    "ch07-q04",
+    "ch08-q01",
+    "ch08-q04"
   ]
 }

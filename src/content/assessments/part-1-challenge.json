@@ -4,8 +4,13 @@
   "kind": "part-challenge",
   "passThreshold": 0.75,
   "questionIds": [
-    "ch01-q80",
-    "ch04-q80",
-    "ch08-q80"
+    "ch01-q05",
+    "ch02-q05",
+    "ch03-q05",
+    "ch04-q05",
+    "ch05-q05",
+    "ch06-q05",
+    "ch07-q05",
+    "ch08-q05"
   ]
 }
