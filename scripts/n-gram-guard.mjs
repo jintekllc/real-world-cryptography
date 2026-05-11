@@ -100,13 +100,14 @@ function ensurePdfPresent() {
 }
 
 function ensurePdftotextPresent() {
-  // pdftotext -v writes the version banner to STDERR and exits 0 in poppler.
+  // pdftotext -v writes the version banner to STDERR. Modern poppler exits 0;
+  // older poppler releases (≤0.41) and some downstream forks exit 99 even when
+  // functional (WR-02). Treat the binary as available as long as spawnSync
+  // didn't error out (ENOENT) and the banner regex matches — the banner is the
+  // load-bearing signal, the exit code is incidental.
   const probe = spawnSync('pdftotext', ['-v'], { encoding: 'utf8' });
   const banner = (probe.stderr || '') + (probe.stdout || '');
-  const ok =
-    !probe.error &&
-    probe.status === 0 &&
-    /pdftotext|poppler/i.test(banner);
+  const ok = !probe.error && /pdftotext|poppler/i.test(banner);
   if (!ok) {
     console.error(
       'error: pdftotext not found on PATH; install with: ' +
