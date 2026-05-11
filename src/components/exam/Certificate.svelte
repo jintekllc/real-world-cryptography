@@ -35,12 +35,19 @@
   });
 
   // Persist on blur to avoid thrashing storage on every keystroke.
+  //
+  // WR-07: trim before persisting and skip whitespace-only writes. The
+  // MetaV1Schema accepts any string, so a stray space-tab in the field
+  // would otherwise persist as the student name and the printed
+  // certificate would render with a blank line where the name belongs.
   function persistName(): void {
+    const trimmed = name.trim();
+    if (trimmed === '') return;
     const existing = safeRead('rwc:meta:v1', MetaV1Schema);
     const stamp = new Date().toISOString();
     const next: MetaV1 = existing === null
-      ? { version: 1, studentName: name, firstSeenAt: stamp, lastResetAt: null }
-      : { ...existing, studentName: name };
+      ? { version: 1, studentName: trimmed, firstSeenAt: stamp, lastResetAt: null }
+      : { ...existing, studentName: trimmed };
     safeWrite('rwc:meta:v1', next, MetaV1Schema);
   }
 
