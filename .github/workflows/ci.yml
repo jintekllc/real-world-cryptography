@@ -103,9 +103,16 @@ jobs:
       - name: Install Playwright Chromium (+ system deps)
         if: steps.pwcache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install --with-deps chromium
-      - name: Install Playwright system deps (cache hit path)
+      - name: Install Playwright system deps + verify browser (cache hit path)
+        # WR-01: defend against partial caches. If a prior run was canceled
+        # mid-download, actions/cache may have saved an empty/partial
+        # ~/.cache/ms-playwright. `playwright install chromium` is
+        # idempotent — a no-op if the binary is already present, a fresh
+        # download otherwise. install-deps installs apt system libs only.
         if: steps.pwcache.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
+        run: |
+          pnpm exec playwright install chromium
+          pnpm exec playwright install-deps chromium
       - name: Run Playwright
         run: pnpm test:e2e
       - name: Upload Playwright report
